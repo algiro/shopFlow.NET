@@ -1,0 +1,182 @@
+﻿@page "/movements"
+@using shopFlow.Services
+@using shopFlow.Components
+@using System.Linq
+@using static shopFlow.Components.Shared.DatePeriod
+
+@rendermode InteractiveServer
+
+@inject IMovementService MovementService
+@inject ILogger<Movement> _logger
+<h1>Movements</h1>
+<Modal @ref="modal" />
+<ConfirmDialog @ref="dialog" />
+
+@if (movements == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <p> Create new movement </p>
+    <div class="form-group row">
+        <div class="col-2">
+            <DateInput TValue="DateOnly" @bind-Value="@latestDo" Placeholder="Enter Mov. Date" />
+        </div>
+        <label class="col-1 col-form-label"> Cash </label>
+        <div class="col-2">
+            <CurrencyInput TValue="decimal" Locale="es-ES" @bind-Value="@cashAmount" MinimumFractionDigits="2"
+                EnableMinMax="true" Min="0" Max="4999" Placeholder="Cash amount" />
+        </div>
+        @if (LatestMovementType == null || LatestMovementType != MovementType.Open)
+        {
+            <div class="col-1"> <Button Color="ButtonColor.Primary" @onclick="() => CreateOpenMovement()">Open</Button> </div>
+        }
+        @if (LatestMovementType == MovementType.Open)
+        {
+            <div class="col-1"> <input type="checkbox" @bind-value="isPartial"> <label class="col-1 col-form-label"> Partial
+                </label> </div>
+            <label class="col-1 col-form-label"> Card: </label>
+            <div class="col-2">
+                <CurrencyInput TValue="decimal" Locale="es-ES" @bind-Value="@cardAmount" MinimumFractionDigits="2"
+                    EnableMinMax="true" Min="0" Max="4999" Placeholder="Card amount" />
+            </div>
+            <div class="col-1"> <Button Color="ButtonColor.Primary" @onclick="() => CreateCloseMovement()">Close</Button> </div>
+        }
+    </div>
+
+    <p> Movement Filter </p>
+
+    <div>
+        <DatePeriod OnSearch="@ReloadMovements" />
+    </div>
+
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Source</th>
+                <th>Amount</th>
+                <th>-</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var movement in OrderedMovements)
+            {
+                <tr>
+                    <td>@movement.Date.ToString("dd-MM-yyyy HH:mm:ss")</td>
+                    <td>@movement.Type.ToString()</td>
+                    <td>@movement.Source.ToString()</td>
+                    <td>@movement.Amount</td>
+                    <td><Button Color="ButtonColor.Primary" @onclick="() => EditMovement(movement)">Edit</Button>
+                        <Button Color="ButtonColor.Primary" @onclick="() => DeleteMovement(movement)">Delete</Button>
+                    </td>
+
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<style>
+    .bottom-three {
+        margin-bottom: 2cm;
+    }
+</style>
+
+@code {
+    private ConfirmDialog dialog;
+    private Modal modal = default!;
+    private string? message;
+    private IEnumerable<IMovement> movements = Enumerable.Empty<IMovement>();
+
+    private IMovement[] OrderedMovements => movements.OrderBy(m => m.Date).ToArray();
+    private DateOnly latestDo = DateOnly.FromDateTime(DateTime.Now);
+    private MovementType? LatestMovementType => movements.Count() == 0 ? null : OrderedMovements.Where(m => m.Type ==
+    MovementType.Open || m.Type == MovementType.Close)?.Last()?.Type;
+    private decimal cashAmount;
+    private decimal cardAmount;
+    private bool isPartial;
+    private DateOnly fromDate;
+    private DateOnly toDate;
+    private DatePeriodValues datePeriodValues => new DatePeriodValues { FromDate = fromDate, ToDate = toDate };
+
+    protected override Task OnInitializedAsync()
+    {
+        ResetDateTimeToNow();
+        fromDate = new DateOnly(latestDo.Year, latestDo.Month, 1);
+        toDate = new DateOnly(latestDo.Year, latestDo.Month, DateTime.DaysInMonth(latestDo.Year, latestDo.Month));
+        ReloadMovements(datePeriodValues);
+        return Task.CompletedTask;
+    }
+    protected async Task CreateOpenMovement()
+    {
+        _logger.LogInformation("CreateOpenMovement....");
+        var confirmation = await dialog.ShowAsync(
+        title: "Are you sure you want to Open the Drawer?",
+        message1: $"You are opening it with {cashAmount}",
+        message2: "Do you want to proceed?");
+        if (confirmation)
+        {
+            var movementDT = GetMovementDT();
+            var movement = MovementService.Open(movementDT, cashAmount);
+            ReloadMovements(datePeriodValues);
+        }
+    }
+    protected async Task CreateCloseMovement()
+    {
+        _logger.LogInformation("CreateCloseMovement....");
+        var confirmation = await dialog.ShowAsync(
+        title: "Are you sure you want to Close the Drawer?",
+        message1: $"You are closing it with cash:{cashAmount} and card:{cardAmount}",
+        message2: "Do you want to proceed?");
+        if (confirmation)
+        {
+            var movementDT = GetMovementDT();
+            var movement = MovementService.Close(movementDT, cashAmount, (isPartial, cardAmount));
+            ReloadMovements(datePeriodValues);
+        }
+    }
+    protected async Task EditMovement(IMovement selectedMovement)
+    {
+        var parameters = new Dictionary<string, object>();
+        parameters.Add("movement", selectedMovement);
+        parameters.Add("OnclickCallback", EventCallback.Factory.Create<IMovement>(this, UpdateMovement));
+        await modal.ShowAsync<MovementEdit>(title: "Movement Details", parameters: parameters);
+    }
+    protected async Task DeleteMovement(IMovement selectedMovement)
+    {
+        var confirmation = await dialog.ShowAsync(
+        title: "Are you sure you want to Delete the selected movement?",
+        message1: $"You are deleting an {selectedMovement.Type} with amount:{selectedMovement.Amount}",
+        message2: "Do you want to proceed?");
+        if (confirmation)
+        {
+            MovementService.Delete(selectedMovement);
+            ReloadMovements(datePeriodValues);
+        }
+    }
+
+    protected void ReloadMovements(DatePeriodValues datePeriod)
+    {
+        fromDate = datePeriod.FromDate;
+        toDate = datePeriod.ToDate;
+        _logger.LogInformation($"ReloadMovements....{fromDate} - {toDate}");
+        movements = MovementService.GetMovements(fromDate, toDate).ToArray();
+        ResetDateTimeToNow();
+    }
+    private void ResetDateTimeToNow()
+    {
+        latestDo = DateOnly.FromDateTime(DateTime.Now);
+    }
+    private void UpdateMovement(IMovement movement)
+    {
+        MovementService.Update(movement);
+        ReloadMovements(datePeriodValues);
+    }
+    private TimeOnly CurrentTimeOnly => TimeOnly.FromDateTime(DateTime.Now);
+    private DateTime GetMovementDT() => latestDo.ToDateTime(CurrentTimeOnly).AddSeconds(DateTime.Now.Second);
+}
+º

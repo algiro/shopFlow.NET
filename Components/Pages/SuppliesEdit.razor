@@ -1,0 +1,46 @@
+﻿@using shopFlow.Persistency
+@using shopFlow.Services
+
+@attribute [StreamRendering]
+@rendermode InteractiveServer
+
+<Modal @ref="modal" />
+<ConfirmDialog @ref="dialog" />
+
+<p> Supplies </p>
+<div class="row">
+    <textarea id="expTypesContent" name="expTypesContent" rows="@Supplies.Count()" cols="45"
+        @bind-value="@suppliesContent" @bind-value:event="oninput" />
+</div>
+<div class="row">
+    <div class="col-1"> <Button Color="ButtonColor.Primary" @onclick="() => SaveSupplies()">Save</Button> </div>
+</div>
+
+
+@code {
+    private Modal modal = default!;
+    private ConfirmDialog dialog;
+    private IEnumerable<string> Supplies { get; set; } = Enumerable.Empty<string>();
+    private string suppliesContent = "";
+
+    [Parameter] public EventCallback<IExpense> OnClickCallback { get; set; }
+
+    protected override Task OnInitializedAsync()
+    {
+        Supplies = ExpensesConfigPersistency.LoadSupplies();
+        suppliesContent = string.Join('\n', Supplies);
+        return Task.CompletedTask;
+    }
+    protected async Task SaveSupplies()
+    {
+        Console.WriteLine("SaveSupplies....");
+        var confirmation = await dialog.ShowAsync(
+        title: "Are you sure you want to Save the updated Supplies List?",
+        message1: "Do you want to proceed?");
+        if (confirmation)
+        {
+            var hasBeenSaved = ExpensesConfigPersistency.SaveSupplies(suppliesContent.Split('\n'));
+            await modal.HideAsync();
+        }
+    }
+}

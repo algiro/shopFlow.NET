@@ -1,0 +1,47 @@
+﻿@using shopFlow.Persistency
+@using shopFlow.Services
+
+@attribute [StreamRendering]
+@rendermode InteractiveServer
+
+<Modal @ref="modal" />
+<ConfirmDialog @ref="dialog" />
+
+<p> Expenses Types </p>
+<div class="row">
+    <textarea id="expTypesContent" name="expTypesContent" rows="@ExpTypes.Count()" cols="45"
+        @bind-value="@expTypesContent" @bind-value:event="oninput" />
+</div>
+<div class="row">
+    <div class="col-1"> <Button Color="ButtonColor.Primary" @onclick="() => SaveExpTypes()">Save</Button> </div>
+</div>
+
+
+@code {
+    private Modal modal = default!;
+    private ConfirmDialog dialog;
+    private IEnumerable<string> ExpTypes { get; set; } = Enumerable.Empty<string>();
+    private string expTypesContent = "";
+
+    [Parameter] public EventCallback<IExpense> OnClickCallback { get; set; }
+
+    protected override Task OnInitializedAsync()
+    {
+        ExpTypes = ExpensesConfigPersistency.LoadExpTypes();
+        expTypesContent = string.Join('\n', ExpTypes);
+        return Task.CompletedTask;
+    }
+    protected async Task SaveExpTypes()
+    {
+        Console.WriteLine("SaveExpTypes....");
+        var confirmation = await dialog.ShowAsync(
+        title: "Are you sure you want to Save the updated Expense Types?",
+        message1: "Do you want to proceed?");
+        if (confirmation)
+        {
+            var hasBeenSaved = ExpensesConfigPersistency.SaveExpensesTypes(expTypesContent.Split('\n'));
+            await modal.HideAsync();
+        }
+    }
+    private TimeOnly CurrentTimeOnly => TimeOnly.FromDateTime(DateTime.Now);
+}

@@ -1,0 +1,78 @@
+﻿@using shopFlow.Config
+@using shopFlow.Services
+
+@attribute [StreamRendering]
+@rendermode InteractiveServer
+
+<Modal @ref="modal" />
+<ConfirmDialog @ref="dialog" />
+
+<p> Edit expense </p>
+<div class="row">
+    <div class="col-6"> Date: @movementDT </div>
+</div>
+<div class="row">
+    <label class="col-3 col-form-label"> Amount </label>
+    <div class="col-3">
+        <CurrencyInput TValue="decimal" Locale="es-ES" @bind-Value="@amount" MinimumFractionDigits="2"
+            EnableMinMax="true" Min="0" Max="4999" Placeholder="Cash amount" />
+    </div>
+    <label class="col-3 col-form-label"> Type </label>
+    <div class="col-3">
+        <select @bind="@ExpType">
+            @foreach (var exp in ExpenseTypes)
+            {
+                <option value="@exp">@exp</option>
+            }
+        </select>
+    </div>
+</div>
+<div class="row">
+    <div class="col-1"> <Button Color="ButtonColor.Primary" @onclick="() => EditExpense()">Edit</Button> </div>
+</div>
+
+
+@code {
+    private Modal modal = default!;
+    private ConfirmDialog dialog;
+    private decimal amount;
+    private string ExpType { get; set; } = ExpenseType.Other.ToString();
+    private string Supplies { get; set; } = "";
+
+    private string[] ExpenseTypes = [""];
+    private string[] allSupplies = [""];
+
+
+    [Parameter] public IExpense expense { get; set; }
+    [Parameter] public EventCallback<IExpense> OnClickCallback { get; set; }
+
+    private DateTime movementDT;
+    protected override Task OnInitializedAsync()
+    {
+        amount = expense.Amount;
+        ExpenseTypes = Enum.GetNames<ExpenseType>().ToArray();
+        allSupplies = ShopFlowConfig.Instance.Supplies;
+        ExpType = expense.ExpenseType.ToString();
+        Supplies = allSupplies[0];
+
+        return Task.CompletedTask;
+    }
+    protected async Task EditExpense()
+    {
+        Console.WriteLine("EditnExpense....");
+        var confirmation = await dialog.ShowAsync(
+        title: "Are you sure you want to Edit the expense?",
+        message1: "Editing could change expense amount",
+        message2: "Do you want to proceed?");
+        if (confirmation)
+        {
+            var movement = shopFlow.Services.Movement.Create(expense.Date, amount, expense.Type, expense.Source);
+            expense =
+            shopFlow.Services.Expense.Create(movement, Enum.Parse<ExpenseType>(ExpType), expense.Supplies,
+            expense.Description);
+            await OnClickCallback.InvokeAsync(expense);
+            await modal.HideAsync();
+        }
+    }
+    private TimeOnly CurrentTimeOnly => TimeOnly.FromDateTime(DateTime.Now);
+}

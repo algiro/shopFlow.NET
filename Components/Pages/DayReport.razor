@@ -1,0 +1,119 @@
+﻿@page "/dayReport"
+@using shopFlow.Services
+@using System.Linq;
+
+@attribute [StreamRendering]
+@rendermode InteractiveServer
+
+@inject IMovementService MovementService
+@inject IExpenseService ExpenseService
+
+
+<h1>Day Report</h1>
+<div class="form-group row">
+    <label class="col-1 col-form-label">From Date:</label>
+    <div class="col-2">
+        <DateInput TValue="DateOnly" @bind-Value="@fromDate" Placeholder="Enter Mov. Date" />
+    </div>
+    <label class="col-1 col-form-label">To Date: </label>
+    <div class="col-2">
+        <DateInput TValue="DateOnly" @bind-Value="@toDate" Placeholder="Enter Mov. Date" />
+    </div>
+    <div class="col-1"> <Button Color="ButtonColor.Primary" @onclick="() => SearchMovement()">Search</Button> </div>
+</div>
+<div>
+    <div class="mb-3">
+        <Button Type="ButtonType.Button" Color="ButtonColor.Light" Size="ButtonSize.Large">
+            Total Cash <Badge Color="BadgeColor.Secondary">@movementsSummary?.CashAmount</Badge>
+        </Button>
+        <Button Type="ButtonType.Button" Color="ButtonColor.Light" Size="ButtonSize.Large">
+            Total Card <Badge Color="BadgeColor.Primary"> @movementsSummary?.CardAmount</Badge>
+        </Button>
+        <Button Type="ButtonType.Button" Color="ButtonColor.Light" Size="ButtonSize.Large">
+            Total IN <Badge Color="BadgeColor.Warning">@movementsSummary?.GetTotal()</Badge>
+        </Button>
+        <Button Type="ButtonType.Button" Color="ButtonColor.Light" Size="ButtonSize.Large">
+            Total NET <Badge Color="BadgeColor.Success">@movementsSummary?.GetTotalNet()</Badge>
+        </Button>
+
+    </div>
+</div>
+<div>
+    Day Summaries:
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Cash</th>
+                <th>Card</th>
+                <th>Total IN</th>
+                <th>Expenses</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (movementsSummary != null)
+            {
+                @foreach (var dayMovement in movementsSummary.DaySummaries)
+                {
+                    <tr>
+                        <td>@dayMovement.Date.ToString("dd-MM-yyyy")</td>
+                        <td>@dayMovement.CashAmount</td>
+                        <td>@dayMovement.CardAmount</td>
+                        <td>@dayMovement.GetTotal()</td>
+                        <td>@dayMovement.ExpenseAmount</td>
+                        <td>@string.Join("<br>", dayMovement.Notes)</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+<div>
+    Movements:
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Source</th>
+                <th>Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+
+            @foreach (var movement in OrderedMovements)
+            {
+                <tr>
+                    <td>@movement.Date.ToString("dd-MM-yyyy HH:mm:ss")</td>
+                    <td>@movement.Type.ToString()</td>
+                    <td>@movement.Source.ToString()</td>
+                    <td>@movement.Amount</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private IEnumerable<IMovement> movements = Enumerable.Empty<IMovement>();
+
+    private IMovement[] OrderedMovements => movements.OrderBy(m => m.Date).ToArray();
+    private DateOnly fromDate;
+    private DateOnly toDate;
+    private MovementType? LatestMovementType => movements.Count() == 0 ? null : OrderedMovements?.Last()?.Type;
+    private IMovementsSummary? movementsSummary = null;
+    protected override Task OnInitializedAsync()
+    {
+        SearchMovement();
+        fromDate = DateOnly.FromDateTime(DateTime.UtcNow);
+        toDate = DateOnly.FromDateTime(DateTime.UtcNow);
+        return Task.CompletedTask;
+    }
+    protected void SearchMovement()
+    {
+        movements = MovementService.GetMovements(fromDate, toDate);
+        var expenses = ExpenseService.GetExpenses(fromDate, toDate);
+        movementsSummary = MovementSummary.Create(movements.Concat(expenses));
+    }
+}

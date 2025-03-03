@@ -1,0 +1,45 @@
+﻿<div class="form-group row">
+    <label class="col-1 col-form-label">From Date: </label>
+    <div class="col-2">
+        <DateInput TValue="DateOnly" @bind-Value="@fromDate" Placeholder="From Date" />
+    </div>
+    <label class="col-1 col-form-label">To Date: </label>
+    <div class="col-2">
+        <DateInput TValue="DateOnly" @bind-Value="@toDate" Placeholder="To Date" />
+    </div>
+    <div class="col-1">
+        <Button Color="ButtonColor.Primary" @onclick="Search">Search</Button>
+    </div>
+</div>
+
+@code {
+    private DateOnly fromDate;
+    private DateOnly toDate;
+
+    [Parameter] public EventCallback<DatePeriodValues> OnSearch { get; set; }  // Changed to a parameter with DatePeriodValues
+
+    protected override Task OnInitializedAsync()
+    {
+        var now = DateTime.UtcNow;
+        fromDate = new DateOnly(now.Year,now.Month,1);
+        toDate = new DateOnly(now.Year,now.Month,DateTime.DaysInMonth(now.Year,now.Month));
+        return Task.CompletedTask;
+    }
+
+    private async Task Search()
+    {
+        Console.WriteLine($"From Date: {fromDate}, To Date: {toDate}");
+
+        // Create a DatePeriodValues object to pass the values
+        var values = new DatePeriodValues { FromDate = fromDate, ToDate = toDate };
+
+        await OnSearch.InvokeAsync(values); // Pass the DatePeriodValues object
+    }
+
+    // Class to hold the date values
+    public class DatePeriodValues
+    {
+        public DateOnly FromDate { get; set; }
+        public DateOnly ToDate { get; set; }
+    }
+}

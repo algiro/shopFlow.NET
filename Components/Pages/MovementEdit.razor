@@ -1,0 +1,48 @@
+﻿@using shopFlow.Services
+
+@attribute [StreamRendering]
+@rendermode InteractiveServer
+
+<Modal @ref="modal" />
+<ConfirmDialog @ref="dialog" />
+
+    <p> Edit  movement </p>
+    <div class="row">
+        <div class="col-6"> Date: @movementDT </div>
+    </div>
+    <div class="row">
+        <label class="col-3 col-form-label"> Amount </label><div class="col-3"> <CurrencyInput TValue="decimal" Locale="es-ES" @bind-Value="@amount" MinimumFractionDigits="2" EnableMinMax="true" Min="0" Max="4999" Placeholder="Cash amount" />  </div>
+    </div>
+    <div class="row">
+        <div class="col-1"> <Button Color="ButtonColor.Primary" @onclick="() => EditMovement()">Edit</Button> </div>
+    </div>
+    
+
+@code {
+    private Modal modal = default!;
+    private ConfirmDialog dialog;
+    private decimal amount;
+
+    [Parameter] public IMovement movement {get;set;}
+    [Parameter] public EventCallback<IMovement> OnClickCallback { get; set; }
+
+    private DateTime movementDT;
+    protected override Task OnInitializedAsync()
+    {
+        amount = movement.Amount;
+        return Task.CompletedTask;
+    }
+    protected async Task EditMovement() {
+        Console.WriteLine("EditnMovement....");
+        var confirmation = await dialog.ShowAsync(
+            title: "Are you sure you want to Edit the movement?",
+            message1: "Editing could change Cash or Card amount",
+            message2: "Do you want to proceed?");
+        if (confirmation) {    
+            movement = shopFlow.Services.Movement.Create(movement.Date,amount,movement.Type,movement.Source);
+            await OnClickCallback.InvokeAsync(movement);
+            await modal.HideAsync();
+        }
+    }
+    private TimeOnly CurrentTimeOnly => TimeOnly.FromDateTime(DateTime.Now);
+}
