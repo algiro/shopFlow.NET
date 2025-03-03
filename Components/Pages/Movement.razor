@@ -2,7 +2,8 @@
 @using shopFlow.Services
 @using shopFlow.Components
 @using System.Linq
-@using static shopFlow.Components.Shared.DatePeriod
+@using shopFlow.Components.Shared
+@using shopFlow.Utils.Dates
 
 @rendermode InteractiveServer
 
@@ -87,9 +88,8 @@ else
 </style>
 
 @code {
-    private ConfirmDialog dialog;
+    private ConfirmDialog? dialog;
     private Modal modal = default!;
-    private string? message;
     private IEnumerable<IMovement> movements = Enumerable.Empty<IMovement>();
 
     private IMovement[] OrderedMovements => movements.OrderBy(m => m.Date).ToArray();
@@ -114,7 +114,7 @@ else
     protected async Task CreateOpenMovement()
     {
         _logger.LogInformation("CreateOpenMovement....");
-        var confirmation = await dialog.ShowAsync(
+        var confirmation = await dialog!.ShowAsync(
         title: "Are you sure you want to Open the Drawer?",
         message1: $"You are opening it with {cashAmount}",
         message2: "Do you want to proceed?");
@@ -128,7 +128,7 @@ else
     protected async Task CreateCloseMovement()
     {
         _logger.LogInformation("CreateCloseMovement....");
-        var confirmation = await dialog.ShowAsync(
+        var confirmation = await dialog!.ShowAsync(
         title: "Are you sure you want to Close the Drawer?",
         message1: $"You are closing it with cash:{cashAmount} and card:{cardAmount}",
         message2: "Do you want to proceed?");
@@ -148,7 +148,7 @@ else
     }
     protected async Task DeleteMovement(IMovement selectedMovement)
     {
-        var confirmation = await dialog.ShowAsync(
+        var confirmation = await dialog!.ShowAsync(
         title: "Are you sure you want to Delete the selected movement?",
         message1: $"You are deleting an {selectedMovement.Type} with amount:{selectedMovement.Amount}",
         message2: "Do you want to proceed?");

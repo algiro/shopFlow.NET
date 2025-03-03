@@ -3,6 +3,7 @@
 @using shopFlow.Services
 @using System.Linq;
 @using shopFlow.Components.Shared
+@using shopFlow.Utils.Dates
 @using static shopFlow.Components.Shared.DatePeriod
 
 @rendermode InteractiveServer
@@ -192,7 +193,7 @@ else
 }
 
 @code {
-    private ConfirmDialog dialog;
+    private ConfirmDialog? dialog;
     private Modal modal = default!;
 
     private IEnumerable<IExpense> expenses = Enumerable.Empty<IExpense>();
@@ -227,8 +228,8 @@ else
     private DatePeriodValues datePeriodValues => new DatePeriodValues { FromDate = fromDate, ToDate = toDate };
     private void LoadExpTypesAndSupplies()
     {
-        ExpenseTypes = ShopFlowConfig.Instance.ExpensesTypes;
-        allSupplies = ShopFlowConfig.Instance.Supplies;
+        ExpenseTypes = ShopFlowConfig.Instance.GetExpensesTypes();
+        allSupplies = ShopFlowConfig.Instance.GetSupplies();
     }
     private HashSet<IExpense> selectedExpense = new();
     private Task OnSelectedItemsChanged(HashSet<IExpense> expense)
@@ -246,7 +247,7 @@ else
     protected async Task AddExpense()
     {
         Console.WriteLine("CreateOpenMovement....");
-        var confirmation = await dialog.ShowAsync(
+        var confirmation = await dialog!.ShowAsync(
         title: "Are you sure you want to add an expense?",
         message1: $"You are creating it with {Amount}€ and type:{ExpType}",
         message2: "Do you want to proceed?");
@@ -275,14 +276,14 @@ else
     }
     protected async Task DeleteExpense(IExpense selectedExpense)
     {
-        var confirmation = await dialog.ShowAsync(
+        var confirmation = await dialog!.ShowAsync(
         title: "Are you sure you want to Delete the selected expense?",
         message1: $"You are deleting an {selectedExpense.Type} with amount:{selectedExpense.Amount}",
         message2: "Do you want to proceed?");
         if (confirmation)
         {
             ExpenseService.Delete(selectedExpense);
-            ReloadExpenses(datePeriodValues);
+            await ReloadExpenses(datePeriodValues);
         }
     }
     protected async Task EditExpTypes()
@@ -295,10 +296,10 @@ else
         await modal.ShowAsync<SuppliesEdit>(title: "Supplies List", parameters: new Dictionary<string, object>());
         LoadExpTypesAndSupplies();
     }
-    private void UpdateExpense(IExpense expense)
+    private async Task UpdateExpense(IExpense expense)
     {
         ExpenseService.Update(expense);
-        ReloadExpenses(datePeriodValues);
+        await ReloadExpenses(datePeriodValues);
     }
     private async Task ReloadExpenses(DatePeriodValues datePeriod)
     {

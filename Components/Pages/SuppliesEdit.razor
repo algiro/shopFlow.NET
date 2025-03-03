@@ -19,7 +19,7 @@
 
 @code {
     private Modal modal = default!;
-    private ConfirmDialog dialog;
+    private ConfirmDialog? dialog;
     private IEnumerable<string> Supplies { get; set; } = Enumerable.Empty<string>();
     private string suppliesContent = "";
 
@@ -34,7 +34,7 @@
     protected async Task SaveSupplies()
     {
         Console.WriteLine("SaveSupplies....");
-        var confirmation = await dialog.ShowAsync(
+        var confirmation = await dialog!.ShowAsync(
         title: "Are you sure you want to Save the updated Supplies List?",
         message1: "Do you want to proceed?");
         if (confirmation)

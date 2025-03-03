@@ -19,7 +19,7 @@
 
 @code {
     private Modal modal = default!;
-    private ConfirmDialog dialog;
+    private ConfirmDialog? dialog;
     private IEnumerable<string> ExpTypes { get; set; } = Enumerable.Empty<string>();
     private string expTypesContent = "";
 
@@ -34,7 +34,7 @@
     protected async Task SaveExpTypes()
     {
         Console.WriteLine("SaveExpTypes....");
-        var confirmation = await dialog.ShowAsync(
+        var confirmation = await dialog!.ShowAsync(
         title: "Are you sure you want to Save the updated Expense Types?",
         message1: "Do you want to proceed?");
         if (confirmation)

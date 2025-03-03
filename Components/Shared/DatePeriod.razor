@@ -1,4 +1,5 @@
-﻿<div class="form-group row">
+﻿@using shopFlow.Utils.Dates
+<div class="form-group row">
     <label class="col-1 col-form-label">From Date: </label>
     <div class="col-2">
         <DateInput TValue="DateOnly" @bind-Value="@fromDate" Placeholder="From Date" />
@@ -16,13 +17,13 @@
     private DateOnly fromDate;
     private DateOnly toDate;
 
-    [Parameter] public EventCallback<DatePeriodValues> OnSearch { get; set; }  // Changed to a parameter with DatePeriodValues
+    [Parameter] public EventCallback<DatePeriodValues> OnSearch { get; set; } // Changed to a parameter with
 
     protected override Task OnInitializedAsync()
     {
         var now = DateTime.UtcNow;
-        fromDate = new DateOnly(now.Year,now.Month,1);
-        toDate = new DateOnly(now.Year,now.Month,DateTime.DaysInMonth(now.Year,now.Month));
+        fromDate = new DateOnly(now.Year, now.Month, 1);
+        toDate = new DateOnly(now.Year, now.Month, DateTime.DaysInMonth(now.Year, now.Month));
         return Task.CompletedTask;
     }
 
@@ -36,10 +37,5 @@
         await OnSearch.InvokeAsync(values); // Pass the DatePeriodValues object
     }
 
-    // Class to hold the date values
-    public class DatePeriodValues
-    {
-        public DateOnly FromDate { get; set; }
-        public DateOnly ToDate { get; set; }
-    }
+
 }

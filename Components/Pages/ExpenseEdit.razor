@@ -34,7 +34,7 @@
 
 @code {
     private Modal modal = default!;
-    private ConfirmDialog dialog;
+    private ConfirmDialog? dialog;
     private decimal amount;
     private string ExpType { get; set; } = ExpenseType.Other.ToString();
     private string Supplies { get; set; } = "";
@@ -43,15 +43,14 @@
     private string[] allSupplies = [""];
 
 
-    [Parameter] public IExpense expense { get; set; }
+    [Parameter] public IExpense? expense { get; set; }
     [Parameter] public EventCallback<IExpense> OnClickCallback { get; set; }
-
-    private DateTime movementDT;
+    private DateTime movementDT = DateTime.UtcNow;
     protected override Task OnInitializedAsync()
     {
-        amount = expense.Amount;
+        amount = expense!.Amount;
         ExpenseTypes = Enum.GetNames<ExpenseType>().ToArray();
-        allSupplies = ShopFlowConfig.Instance.Supplies;
+        allSupplies = ShopFlowConfig.Instance.GetSupplies();
         ExpType = expense.ExpenseType.ToString();
         Supplies = allSupplies[0];
 
@@ -60,13 +59,13 @@
     protected async Task EditExpense()
     {
         Console.WriteLine("EditnExpense....");
-        var confirmation = await dialog.ShowAsync(
+        var confirmation = await dialog!.ShowAsync(
         title: "Are you sure you want to Edit the expense?",
         message1: "Editing could change expense amount",
         message2: "Do you want to proceed?");
         if (confirmation)
         {
-            var movement = shopFlow.Services.Movement.Create(expense.Date, amount, expense.Type, expense.Source);
+            var movement = shopFlow.Services.Movement.Create(expense!.Date, amount, expense.Type, expense.Source);
             expense =
             shopFlow.Services.Expense.Create(movement, Enum.Parse<ExpenseType>(ExpType), expense.Supplies,
             expense.Description);
