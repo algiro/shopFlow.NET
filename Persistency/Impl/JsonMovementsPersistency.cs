@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Microsoft.VisualBasic;
 using Newtonsoft.Json;
@@ -8,12 +9,12 @@ using shopFlow.Utils;
 namespace shopFlow.Persistency
 {
 
-    public class MovementPersistency
+    public class JsonMovementPersistency : IMovementPersistency
     {
-        private readonly static ILogger _logger = LoggerUtils.CreateLogger<MovementPersistency>();
+        private readonly static ILogger _logger = LoggerUtils.CreateLogger<JsonMovementPersistency>();
 
         public const string SUB_FOLDER = "Movements";
-        public static bool Save(IMovement movement)
+        public bool Save(IMovement movement)
         {
             try
             {
@@ -34,7 +35,7 @@ namespace shopFlow.Persistency
             }
 
         }
-        public static bool Delete(IMovement movement)
+        public bool Delete(IMovement movement)
         {
             try
             {
@@ -57,7 +58,7 @@ namespace shopFlow.Persistency
 
         }
 
-        public static IEnumerable<IMovement> LoadMovements((int Year, int Month) period)
+        private IEnumerable<IMovement> LoadMovements((int Year, int Month) period)
         {
             try
             {
@@ -99,7 +100,7 @@ namespace shopFlow.Persistency
             return [];
         }
 
-        public static IEnumerable<IMovement> LoadMovements(DateOnly fromDate, DateOnly toDate)
+        public IEnumerable<IMovement> LoadMovements(DateOnly fromDate, DateOnly toDate)
         {
             try
             {
