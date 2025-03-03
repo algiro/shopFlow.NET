@@ -12,6 +12,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddSingleton<IMovementPersistency, JsonMovementPersistency>();
+builder.Services.AddSingleton<IExpensesPersistency, JsonExpensesPersistency>();
 builder.Services.AddScoped<IMovementService, DefaultMovementService>();
 builder.Services.AddScoped<IExpenseService, DefaultExpenseService>();
 builder.Services.AddBlazorBootstrap();

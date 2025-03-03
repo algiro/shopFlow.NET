@@ -8,12 +8,12 @@ using shopFlow.Utils;
 namespace shopFlow.Persistency
 {
 
-    public class ExpensesPersistency()
+    public class JsonExpensesPersistency : IExpensesPersistency
     {
-        private readonly static ILogger _logger = LoggerUtils.CreateLogger<ExpensesPersistency>();
+        private readonly static ILogger _logger = LoggerUtils.CreateLogger<JsonExpensesPersistency>();
         public const string SUB_FOLDER = "Expenses";
         public const string CONFIG_FOLDER = "Config";
-        public static bool Save(IExpense expenseDetail)
+        public bool Save(IExpense expenseDetail)
         {
             try
             {
@@ -34,7 +34,7 @@ namespace shopFlow.Persistency
             }
 
         }
-        public static bool Delete(IExpense expense)
+        public bool Delete(IExpense expense)
         {
             try
             {
@@ -56,7 +56,7 @@ namespace shopFlow.Persistency
             }
 
         }
-        public static IEnumerable<IExpense> LoadExpenses((int Year, int Month) period)
+        private static IEnumerable<IExpense> LoadExpenses((int Year, int Month) period)
         {
             try
             {
@@ -98,7 +98,7 @@ namespace shopFlow.Persistency
             return Enumerable.Empty<IExpense>();
         }
 
-        public static IEnumerable<IExpense> LoadExpenses(DateOnly fromDate, DateOnly toDate)
+        public IEnumerable<IExpense> LoadExpenses(DateOnly fromDate, DateOnly toDate)
         {
             try
             {
