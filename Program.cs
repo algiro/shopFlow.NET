@@ -1,6 +1,7 @@
 using shopFlow.Config;
 using shopFlow.Components;
 using shopFlow.Services;
+using shopFlow.Persistency;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("/config/appsettings.Development.json", true, true);
@@ -10,6 +11,7 @@ builder.Configuration.AddJsonFile("/config/appsettings.Development.json", true, 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+builder.Services.AddSingleton<IMovementPersistency, JsonMovementPersistency>();
 builder.Services.AddScoped<IMovementService, DefaultMovementService>();
 builder.Services.AddScoped<IExpenseService, DefaultExpenseService>();
 builder.Services.AddBlazorBootstrap();
