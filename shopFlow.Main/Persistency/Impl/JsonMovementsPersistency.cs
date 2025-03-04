@@ -1,5 +1,6 @@
 using System.IO.Abstractions;
 using Newtonsoft.Json;
+using shopFlow.Components.Pages;
 using shopFlow.Config;
 using shopFlow.Services;
 using shopFlow.Utils;
@@ -23,7 +24,9 @@ namespace shopFlow.Persistency
                 {
                     fileSystem.Directory.CreateDirectory(fullPath);
                 }
-                fileSystem.File.WriteAllText(Path.Combine(fullPath, movement.GetFileName()), JsonConvert.SerializeObject(movement));
+                var filePath = Path.Combine(fullPath, movement.GetFileName());
+                fileSystem.File.WriteAllText(filePath, JsonConvert.SerializeObject(movement));
+                _logger.LogInformation("Saved movement: {Movement} to {Path}", movement, filePath);
                 return true;
             }
             catch (Exception ex)
@@ -44,6 +47,7 @@ namespace shopFlow.Persistency
                 if (fileSystem.File.Exists(filePath))
                 {
                     fileSystem.File.Delete(filePath);
+                    _logger.LogInformation("Deleted movement: {Movement} at {Path}", movement, filePath);
                     return true;
                 }
                 return false;
@@ -65,6 +69,7 @@ namespace shopFlow.Persistency
                 var fullPath = Path.Combine(baseFolder, periodFolder);
                 if (fileSystem.Directory.Exists(fullPath))
                 {
+                    _logger.LogInformation("LoadMovements with period: {Period} from path: {Path}", period, fullPath);
                     var allFiles = fileSystem.Directory.GetFiles(fullPath); //Getting Text files
                     var movementFiles = allFiles.Where(f => f.EndsWith("_MOV.json")).Select(f => new FileInfo(f));
                     List<IMovement> movements = new();

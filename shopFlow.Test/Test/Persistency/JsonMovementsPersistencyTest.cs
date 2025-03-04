@@ -19,9 +19,9 @@ namespace showFlow.Test.Test.Persistency
         {
             _fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>
                 {
-                    { @"C:\\data\\shopFlowMovs\\Movements\\2025-01\\2025-01-01_20-02-24_Open_Drawer_MOV.json", new MockFileData("{\"Date\":\"2025-01-01T20:02:24.8632138\",\"Amount\":10.0,\"Type\":\"Open\",\"Source\":\"Drawer\"}") },
-                    { @"C:\\data\\shopFlowMovs\\Movements\\2025-01\\2025-01-02_18-02-24_Open_Drawer_MOV.json", new MockFileData("{\"Date\":\"2025-01-02T18:02:24.8632138\",\"Amount\":9.0,\"Type\":\"Open\",\"Source\":\"Drawer\"}") },
-                    { @"C:\\data\\shopFlowMovs\\Movements\\2025-02\\2025-02-01_15-02-24_Open_Drawer_MOV.json", new MockFileData("{\"Date\":\"2025-02-01T15:02:24.8632138\",\"Amount\":8.0,\"Type\":\"Open\",\"Source\":\"Drawer\"}") },
+                    { @"/data/shopFlowMovs/Movements/2025-01/2025-01-01_20-02-24_Open_Drawer_MOV.json", new MockFileData("{\"Date\":\"2025-01-01T20:02:24.8632138\",\"Amount\":10.0,\"Type\":\"Open\",\"Source\":\"Drawer\"}") },
+                    { @"/data/shopFlowMovs/Movements/2025-01/2025-01-02_18-02-24_Open_Drawer_MOV.json", new MockFileData("{\"Date\":\"2025-01-02T18:02:24.8632138\",\"Amount\":9.0,\"Type\":\"Open\",\"Source\":\"Drawer\"}") },
+                    { @"/data/shopFlowMovs/Movements/2025-02/2025-02-01_15-02-24_Open_Drawer_MOV.json", new MockFileData("{\"Date\":\"2025-02-01T15:02:24.8632138\",\"Amount\":8.0,\"Type\":\"Open\",\"Source\":\"Drawer\"}") },
                 });
 
         }
