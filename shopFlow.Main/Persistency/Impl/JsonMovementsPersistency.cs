@@ -1,6 +1,4 @@
-using System.Collections.Generic;
-using System.Text.Json.Serialization;
-using Microsoft.VisualBasic;
+using System.IO.Abstractions;
 using Newtonsoft.Json;
 using shopFlow.Config;
 using shopFlow.Services;
@@ -9,7 +7,7 @@ using shopFlow.Utils;
 namespace shopFlow.Persistency
 {
 
-    public class JsonMovementPersistency : IMovementPersistency
+    public class JsonMovementPersistency(IFileSystem fileSystem) : IMovementPersistency
     {
         private readonly static ILogger _logger = LoggerUtils.CreateLogger<JsonMovementPersistency>();
 
@@ -21,11 +19,11 @@ namespace shopFlow.Persistency
                 _logger.LogInformation("Save movement: {Movement}", movement);
                 var periodFolder = $"{movement.Date.Year}-{movement.Date.Month.ToString("00")}";
                 var fullPath = Path.Combine(baseFolder, periodFolder);
-                if (!Directory.Exists(fullPath))
+                if (!fileSystem.Directory.Exists(fullPath))
                 {
-                    Directory.CreateDirectory(fullPath);
+                    fileSystem.Directory.CreateDirectory(fullPath);
                 }
-                File.WriteAllText(Path.Combine(fullPath, movement.GetFileName()), JsonConvert.SerializeObject(movement));
+                fileSystem.File.WriteAllText(Path.Combine(fullPath, movement.GetFileName()), JsonConvert.SerializeObject(movement));
                 return true;
             }
             catch (Exception ex)
@@ -43,9 +41,9 @@ namespace shopFlow.Persistency
                 var periodFolder = $"{movement.Date.Year}-{movement.Date.Month.ToString("00")}";
                 var fullPath = Path.Combine(baseFolder, periodFolder);
                 var filePath = Path.Combine(fullPath, movement.GetFileName());
-                if (File.Exists(filePath))
+                if (fileSystem.File.Exists(filePath))
                 {
-                    File.Delete(filePath);
+                    fileSystem.File.Delete(filePath);
                     return true;
                 }
                 return false;
@@ -65,16 +63,16 @@ namespace shopFlow.Persistency
                 _logger.LogInformation("LoadMovements with period: {Period}", period);
                 var periodFolder = $"{period.Year}-{period.Month.ToString("00")}";
                 var fullPath = Path.Combine(baseFolder, periodFolder);
-                if (Directory.Exists(fullPath))
+                if (fileSystem.Directory.Exists(fullPath))
                 {
-                    DirectoryInfo d = new DirectoryInfo(fullPath);
-                    FileInfo[] movementFiles = d.GetFiles("*_MOV.json"); //Getting Text files
+                    var allFiles = fileSystem.Directory.GetFiles(fullPath); //Getting Text files
+                    var movementFiles = allFiles.Where(f => f.EndsWith("_MOV.json")).Select(f => new FileInfo(f));
                     List<IMovement> movements = new();
                     foreach (FileInfo file in movementFiles)
                     {
                         try
                         {
-                            var movement = JsonConvert.DeserializeObject<DefaultMovement>(File.ReadAllText(file.FullName));
+                            var movement = JsonConvert.DeserializeObject<DefaultMovement>(fileSystem.File.ReadAllText(file.FullName));
                             if (movement != null)
                                 movements.Add(movement);
                         }
