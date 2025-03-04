@@ -9,7 +9,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Running Tests
-        run: dotnet test ./shopFlow.Test/showFlow.Test.csproj
+        run: dotnet test ./shopFlow.Test/shopFlow.Test.csproj
       - name: Build image
         run: docker build ./shopFlow.Main/ -t algiro/shop-flow-net:latest
       - name: Push image to DockerHub
