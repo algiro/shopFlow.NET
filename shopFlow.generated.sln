@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "shopFlow", "shopFlow.csproj", "{A99EE82E-444B-4B22-90D9-A18D076AD050}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "shopFlow", "shopFlow.Main\shopFlow.csproj", "{9705BE96-36B0-D269-E272-F9F671C8CFFD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "shopFlow.Test", "shopFlow.Test\shopFlow.Test.csproj", "{EA13A666-79F3-889D-81EF-954327DC7E96}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +13,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A99EE82E-444B-4B22-90D9-A18D076AD050}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A99EE82E-444B-4B22-90D9-A18D076AD050}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A99EE82E-444B-4B22-90D9-A18D076AD050}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A99EE82E-444B-4B22-90D9-A18D076AD050}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9705BE96-36B0-D269-E272-F9F671C8CFFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9705BE96-36B0-D269-E272-F9F671C8CFFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9705BE96-36B0-D269-E272-F9F671C8CFFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9705BE96-36B0-D269-E272-F9F671C8CFFD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA13A666-79F3-889D-81EF-954327DC7E96}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA13A666-79F3-889D-81EF-954327DC7E96}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA13A666-79F3-889D-81EF-954327DC7E96}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA13A666-79F3-889D-81EF-954327DC7E96}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
