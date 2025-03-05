@@ -1,3 +1,4 @@
+using System.IO.Abstractions;
 using System.Text.Json.Serialization;
 using Microsoft.VisualBasic;
 using Newtonsoft.Json;
@@ -8,7 +9,7 @@ using shopFlow.Utils;
 namespace shopFlow.Persistency
 {
 
-    public class JsonExpensesPersistency : IExpensesPersistency
+    public class JsonExpensesPersistency(IFileSystem fileSystem) : IExpensesPersistency
     {
         private readonly static ILogger _logger = LoggerUtils.CreateLogger<JsonExpensesPersistency>();
         public const string SUB_FOLDER = "Expenses";
@@ -20,11 +21,11 @@ namespace shopFlow.Persistency
                 _logger.LogInformation("Save expense: {ExpenseDetail}", expenseDetail);
                 var periodFolder = $"{expenseDetail.Date.Year}-{expenseDetail.Date.Month.ToString("00")}";
                 var fullPath = Path.Combine(baseFolder, periodFolder);
-                if (!Directory.Exists(fullPath))
+                if (!fileSystem.Directory.Exists(fullPath))
                 {
-                    Directory.CreateDirectory(fullPath);
+                    fileSystem.Directory.CreateDirectory(fullPath);
                 }
-                File.WriteAllText(Path.Combine(fullPath, expenseDetail.GetFileName()), JsonConvert.SerializeObject(expenseDetail));
+                fileSystem.File.WriteAllText(Path.Combine(fullPath, expenseDetail.GetFileName()), JsonConvert.SerializeObject(expenseDetail));
                 return true;
             }
             catch (Exception ex)
@@ -42,9 +43,9 @@ namespace shopFlow.Persistency
                 var periodFolder = $"{expense.Date.Year}-{expense.Date.Month.ToString("00")}";
                 var fullPath = Path.Combine(baseFolder, periodFolder);
                 var filePath = Path.Combine(fullPath, expense.GetFileName());
-                if (File.Exists(filePath))
+                if (fileSystem.File.Exists(filePath))
                 {
-                    File.Delete(filePath);
+                    fileSystem.File.Delete(filePath);
                     return true;
                 }
                 return false;
@@ -56,23 +57,23 @@ namespace shopFlow.Persistency
             }
 
         }
-        private static IEnumerable<IExpense> LoadExpenses((int Year, int Month) period)
+        private IEnumerable<IExpense> LoadExpenses((int Year, int Month) period)
         {
             try
             {
                 _logger.LogInformation("LoadExpenses with period: {Period}", period);
                 var periodFolder = $"{period.Year}-{period.Month.ToString("00")}";
                 var fullPath = Path.Combine(baseFolder, periodFolder);
-                if (Directory.Exists(fullPath))
+                if (fileSystem.Directory.Exists(fullPath))
                 {
-                    DirectoryInfo d = new DirectoryInfo(fullPath);
-                    FileInfo[] expensesFiles = d.GetFiles("*_EXP.json"); //Getting Text files
+                    var allFiles = fileSystem.Directory.GetFiles(fullPath);
+                    var expensesFiles = allFiles.Where(f => f.EndsWith("_EXP.json")).Select(f => new FileInfo(f));
                     List<IExpense> expenses = new();
                     foreach (FileInfo file in expensesFiles)
                     {
                         try
                         {
-                            var expense = JsonConvert.DeserializeObject<DefaultExpense>(File.ReadAllText(file.FullName));
+                            var expense = JsonConvert.DeserializeObject<DefaultExpense>(fileSystem.File.ReadAllText(file.FullName));
                             if (expense != null)
                                 expenses.Add(expense);
                         }
@@ -88,14 +89,14 @@ namespace shopFlow.Persistency
                 else
                 {
                     _logger.LogInformation("LoadExpenses with period: {Period} no expenses", period);
-                    return Enumerable.Empty<IExpense>();
+                    return [];
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading expenses with period: {Period}", period);
             }
-            return Enumerable.Empty<IExpense>();
+            return [];
         }
 
         public IEnumerable<IExpense> LoadExpenses(DateOnly fromDate, DateOnly toDate)
