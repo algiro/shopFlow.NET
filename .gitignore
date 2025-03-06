@@ -4,6 +4,10 @@ shopFlow.Main/.vs
 shopFlow.Test/bin
 shopFlow.Test/obj
 shopFlow.Test/.vs
+shopFlow.CLI/bin
+shopFlow.CLI/obj
+shopFlow.CLI/.vs
+
 .vs
 .fake
 .env

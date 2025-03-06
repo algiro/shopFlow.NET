@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "shopFlow", "shopFlow.Main\s
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "shopFlow.Test", "shopFlow.Test\shopFlow.Test.csproj", "{EA13A666-79F3-889D-81EF-954327DC7E96}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "shopFlow.CLI", "shopFlow.CLI\shopFlow.CLI.csproj", "{ADB34427-BE8B-4933-A0C6-AB50F5F6AD25}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{EA13A666-79F3-889D-81EF-954327DC7E96}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EA13A666-79F3-889D-81EF-954327DC7E96}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EA13A666-79F3-889D-81EF-954327DC7E96}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ADB34427-BE8B-4933-A0C6-AB50F5F6AD25}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADB34427-BE8B-4933-A0C6-AB50F5F6AD25}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADB34427-BE8B-4933-A0C6-AB50F5F6AD25}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADB34427-BE8B-4933-A0C6-AB50F5F6AD25}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
