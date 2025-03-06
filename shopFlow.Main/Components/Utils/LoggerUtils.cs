@@ -12,7 +12,12 @@ namespace shopFlow.Utils
             return Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
             {
                 builder
-                    .AddConsole() // Add console logging (or other providers)
+                    .AddSimpleConsole(options =>
+                    {
+                        options.IncludeScopes = true;
+                        options.SingleLine = true;
+                        options.TimestampFormat = "HH:mm:ss.FFFFFF ";
+                    })
                     .AddDebug(); // Add debug logging
             });
         }
