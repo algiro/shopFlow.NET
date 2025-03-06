@@ -3,6 +3,7 @@ services:
     container_name: shop-flow-web
     environment:
       APP_VERSION: "0.1.1"
+      MOV_PERSISTENCY_TYPE: "LiteDB"
     image: algiro/shop-flow-net:latest
     volumes:
       - type: bind
