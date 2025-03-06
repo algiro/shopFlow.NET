@@ -8,11 +8,15 @@ using shopFlow.Utils;
 namespace shopFlow.Persistency
 {
 
-    public class JsonMovementPersistency(IFileSystem fileSystem) : IMovementPersistency
+    public class JsonMovementPersistency : IMovementPersistency
     {
         private readonly static ILogger _logger = LoggerUtils.CreateLogger<JsonMovementPersistency>();
-
         public const string SUB_FOLDER = "Movements";
+        private readonly IFileSystem _fileSystem;
+        public JsonMovementPersistency(IFileSystem? fileSystem=null)
+        {
+            this._fileSystem = fileSystem ?? new FileSystem();
+        }
         public bool Save(IMovement movement)
         {
             try
@@ -20,12 +24,12 @@ namespace shopFlow.Persistency
                 _logger.LogInformation("Save movement: {Movement}", movement);
                 var periodFolder = $"{movement.Date.Year}-{movement.Date.Month.ToString("00")}";
                 var fullPath = Path.Combine(baseFolder, periodFolder);
-                if (!fileSystem.Directory.Exists(fullPath))
+                if (!_fileSystem.Directory.Exists(fullPath))
                 {
-                    fileSystem.Directory.CreateDirectory(fullPath);
+                    _fileSystem.Directory.CreateDirectory(fullPath);
                 }
                 var filePath = Path.Combine(fullPath, movement.GetFileName());
-                fileSystem.File.WriteAllText(filePath, JsonConvert.SerializeObject(movement));
+                _fileSystem.File.WriteAllText(filePath, JsonConvert.SerializeObject(movement));
                 _logger.LogInformation("Saved movement: {Movement} to {Path}", movement, filePath);
                 return true;
             }
@@ -44,9 +48,9 @@ namespace shopFlow.Persistency
                 var periodFolder = $"{movement.Date.Year}-{movement.Date.Month.ToString("00")}";
                 var fullPath = Path.Combine(baseFolder, periodFolder);
                 var filePath = Path.Combine(fullPath, movement.GetFileName());
-                if (fileSystem.File.Exists(filePath))
+                if (_fileSystem.File.Exists(filePath))
                 {
-                    fileSystem.File.Delete(filePath);
+                    _fileSystem.File.Delete(filePath);
                     _logger.LogInformation("Deleted movement: {Movement} at {Path}", movement, filePath);
                     return true;
                 }
@@ -67,17 +71,17 @@ namespace shopFlow.Persistency
                 _logger.LogInformation("LoadMovements with period: {Period}", period);
                 var periodFolder = $"{period.Year}-{period.Month.ToString("00")}";
                 var fullPath = Path.Combine(baseFolder, periodFolder);
-                if (fileSystem.Directory.Exists(fullPath))
+                if (_fileSystem.Directory.Exists(fullPath))
                 {
                     _logger.LogInformation("LoadMovements with period: {Period} from path: {Path}", period, fullPath);
-                    var allFiles = fileSystem.Directory.GetFiles(fullPath); //Getting Text files
+                    var allFiles = _fileSystem.Directory.GetFiles(fullPath); //Getting Text files
                     var movementFiles = allFiles.Where(f => f.EndsWith("_MOV.json")).Select(f => new FileInfo(f));
                     List<IMovement> movements = new();
                     foreach (FileInfo file in movementFiles)
                     {
                         try
                         {
-                            var movement = JsonConvert.DeserializeObject<DefaultMovement>(fileSystem.File.ReadAllText(file.FullName));
+                            var movement = JsonConvert.DeserializeObject<DefaultMovement>(_fileSystem.File.ReadAllText(file.FullName));
                             if (movement != null)
                                 movements.Add(movement);
                         }

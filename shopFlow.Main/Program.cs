@@ -2,16 +2,22 @@ using shopFlow.Config;
 using shopFlow.Components;
 using shopFlow.Services;
 using shopFlow.Persistency;
+using BlazorBootstrap;
+using shopFlow.Persistency.Impl;
+using shopFlow.Utils;
+using System.IO.Abstractions;
 
+ILogger logger = LoggerUtils.CreateLogger<Program>();
+
+logger.LogInformation("Starting ShopFlow");
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("/config/appsettings.Development.json", true, true);
 
-
 // Add services to the container.
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
-builder.Services.AddSingleton<IMovementPersistency, JsonMovementPersistency>();
+builder.Services.AddSingleton<IFileSystem, FileSystem>();
+builder.Services.AddMovementPersistency();
 builder.Services.AddSingleton<IExpensesPersistency, JsonExpensesPersistency>();
 builder.Services.AddScoped<IMovementService, DefaultMovementService>();
 builder.Services.AddScoped<IExpenseService, DefaultExpenseService>();
@@ -35,9 +41,4 @@ app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
-
-//IServiceProvider serviceProvider = builder.Services.BuildServiceProvider();
-//var expService = serviceProvider.GetService<IExpenseService>();
-//expService.Upgrade();
-
 app.Run();
