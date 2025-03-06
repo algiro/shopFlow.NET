@@ -1,6 +1,5 @@
 using System.IO.Abstractions;
 using System.Text.Json.Serialization;
-using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 using shopFlow.Config;
 using shopFlow.Services;
@@ -9,11 +8,18 @@ using shopFlow.Utils;
 namespace shopFlow.Persistency
 {
 
-    public class JsonExpensesPersistency(IFileSystem fileSystem) : IExpensesPersistency
+    public class JsonExpensesPersistency : IExpensesPersistency
     {
         private readonly static ILogger _logger = LoggerUtils.CreateLogger<JsonExpensesPersistency>();
         public const string SUB_FOLDER = "Expenses";
         public const string CONFIG_FOLDER = "Config";
+        private readonly IFileSystem _fileSystem;
+
+        public JsonExpensesPersistency(IFileSystem? fileSystem = null) 
+        {
+            this._fileSystem = fileSystem ?? new FileSystem();
+
+        }
         public bool Save(IExpense expenseDetail)
         {
             try
@@ -21,11 +27,11 @@ namespace shopFlow.Persistency
                 _logger.LogInformation("Save expense: {ExpenseDetail}", expenseDetail);
                 var periodFolder = $"{expenseDetail.Date.Year}-{expenseDetail.Date.Month.ToString("00")}";
                 var fullPath = Path.Combine(baseFolder, periodFolder);
-                if (!fileSystem.Directory.Exists(fullPath))
+                if (!_fileSystem.Directory.Exists(fullPath))
                 {
-                    fileSystem.Directory.CreateDirectory(fullPath);
+                    _fileSystem.Directory.CreateDirectory(fullPath);
                 }
-                fileSystem.File.WriteAllText(Path.Combine(fullPath, expenseDetail.GetFileName()), JsonConvert.SerializeObject(expenseDetail));
+                _fileSystem.File.WriteAllText(Path.Combine(fullPath, expenseDetail.GetFileName()), JsonConvert.SerializeObject(expenseDetail));
                 return true;
             }
             catch (Exception ex)
@@ -43,9 +49,9 @@ namespace shopFlow.Persistency
                 var periodFolder = $"{expense.Date.Year}-{expense.Date.Month.ToString("00")}";
                 var fullPath = Path.Combine(baseFolder, periodFolder);
                 var filePath = Path.Combine(fullPath, expense.GetFileName());
-                if (fileSystem.File.Exists(filePath))
+                if (_fileSystem.File.Exists(filePath))
                 {
-                    fileSystem.File.Delete(filePath);
+                    _fileSystem.File.Delete(filePath);
                     return true;
                 }
                 return false;
@@ -64,16 +70,16 @@ namespace shopFlow.Persistency
                 _logger.LogInformation("LoadExpenses with period: {Period}", period);
                 var periodFolder = $"{period.Year}-{period.Month.ToString("00")}";
                 var fullPath = Path.Combine(baseFolder, periodFolder);
-                if (fileSystem.Directory.Exists(fullPath))
+                if (_fileSystem.Directory.Exists(fullPath))
                 {
-                    var allFiles = fileSystem.Directory.GetFiles(fullPath);
+                    var allFiles = _fileSystem.Directory.GetFiles(fullPath);
                     var expensesFiles = allFiles.Where(f => f.EndsWith("_EXP.json")).Select(f => new FileInfo(f));
                     List<IExpense> expenses = new();
                     foreach (FileInfo file in expensesFiles)
                     {
                         try
                         {
-                            var expense = JsonConvert.DeserializeObject<DefaultExpense>(fileSystem.File.ReadAllText(file.FullName));
+                            var expense = JsonConvert.DeserializeObject<DefaultExpense>(_fileSystem.File.ReadAllText(file.FullName));
                             if (expense != null)
                                 expenses.Add(expense);
                         }

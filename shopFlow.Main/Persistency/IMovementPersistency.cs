@@ -30,7 +30,6 @@ public static class MovementPersistencyHelper
         }
         else
         {
-            services.AddSingleton(new LiteDB.LiteDatabase("/data/shopFlowMovs/lite.db"));
             services.AddSingleton<IMovementPersistency, LiteDBMovementPersistency>();
         }
     }

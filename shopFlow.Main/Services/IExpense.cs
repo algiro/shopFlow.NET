@@ -13,6 +13,8 @@ namespace shopFlow.Services {
     public static class Expense {
         public static IExpense Create(IMovement movement, ExpenseType type,string supplies, string description) => new DefaultExpense(movement, type, supplies, description);
         public static IExpense Create(IMovement movement, string expType,string supplies, string description) => new DefaultExpense(movement, expType, supplies, description);
+        public static DefaultExpense AsDefaultExpense(this IExpense expense) => Create(expense, expense.ExpType, expense.Supplies, expense.Description) as DefaultExpense;
+
     }
 
     public class DefaultExpense : IExpense
