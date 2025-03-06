@@ -32,6 +32,7 @@ namespace shopFlow.Services {
             }
             Supplies = supplies;
             Description = description;
+            Id = this.GetId();
 
         }
 
@@ -52,10 +53,12 @@ namespace shopFlow.Services {
         public string  Description {get;}
         public SourceType Source {get;}
         public MovementType Type {get;}
+
+        public string Id { get; }
     }
 
     public static class ExpenseHelper {
-        public static string GetFileName(this IExpense expense)
-            => $"{expense.Date.ToString("yyyy-MM-dd_HH-mm-ss")}_{expense.Type}_EXP.json";
+        public static string GetId(this IExpense expense) => $"{expense.Date.ToString("yyyy-MM-dd_HH-mm-ss")}_{expense.Type}_EXP";
+        public static string GetFileName(this IExpense expense)  => expense.GetId() + ".json";
     }
 }
