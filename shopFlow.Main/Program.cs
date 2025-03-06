@@ -17,8 +17,10 @@ builder.Configuration.AddJsonFile("/config/appsettings.Development.json", true, 
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
 builder.Services.AddSingleton<IFileSystem, FileSystem>();
+builder.Services.AddSingleton(new LiteDB.LiteDatabase("/data/shopFlowMovs/lite.db"));
 builder.Services.AddMovementPersistency();
-builder.Services.AddSingleton<IExpensesPersistency, JsonExpensesPersistency>();
+builder.Services.AddExpensesPersistency();
+
 builder.Services.AddScoped<IMovementService, DefaultMovementService>();
 builder.Services.AddScoped<IExpenseService, DefaultExpenseService>();
 builder.Services.AddBlazorBootstrap();

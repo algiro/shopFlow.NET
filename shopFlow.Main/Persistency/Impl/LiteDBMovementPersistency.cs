@@ -21,11 +21,17 @@ namespace shopFlow.Persistency.Impl
         }
         public bool Delete(IMovement movement)
         {
-            var hasBeenDeleted = _db.GetCollection<DefaultMovement>(MOVEMENTS_COLLECTION).Delete(movement.Id);
-            _logger.LogInformation("Delete movement: {Movement} deleted:{HasBeenDeleted}", movement, hasBeenDeleted);
-            return hasBeenDeleted;
+            try
+            {
+                var hasBeenDeleted = _db.GetCollection<DefaultMovement>(MOVEMENTS_COLLECTION).Delete(movement.Id);
+                _logger.LogInformation("Delete movement: {Movement} deleted:{HasBeenDeleted}", movement, hasBeenDeleted);
+                return hasBeenDeleted;
+            }
+            finally
+            {
+                _db.Checkpoint();
+            }
         }
-
         public IEnumerable<IMovement> LoadMovements(DateOnly fromDate, DateOnly toDate)
         {
             _logger.LogInformation("LoadMovements movement: {FromDate} to {ToDate}", fromDate, toDate);
@@ -36,20 +42,27 @@ namespace shopFlow.Persistency.Impl
 
         public bool Save(IMovement movement)
         {
-            _logger.LogInformation("Save movement: {Movement}", movement);
-            var movColl = _db.GetCollection<DefaultMovement>(MOVEMENTS_COLLECTION);
-            var storedMovement = movColl.FindById(movement.Id);
-            if (storedMovement != null)
+            try
             {
-                var hasBeenUpdated = movColl.Update(movement.AsDefaultMovement());
-                _logger.LogInformation("Update movement: {Movement} hasBeenUpdated:{hasBeenUpdated}", movement, hasBeenUpdated);
-                return true;
+                _logger.LogInformation("Save movement: {Movement}", movement);
+                var movColl = _db.GetCollection<DefaultMovement>(MOVEMENTS_COLLECTION);
+                var storedMovement = movColl.FindById(movement.Id);
+                if (storedMovement != null)
+                {
+                    var hasBeenUpdated = movColl.Update(movement.AsDefaultMovement());
+                    _logger.LogInformation("Update movement: {Movement} hasBeenUpdated:{hasBeenUpdated}", movement, hasBeenUpdated);
+                    return true;
+                }
+                else
+                {
+                    var idMov = movColl.Insert(movement.AsDefaultMovement());
+                    _logger.LogInformation("Insert movement: {Movement} with Id:{Id}", movement, idMov);
+                    return true;
+                }
             }
-            else
+            finally
             {
-                var idMov = movColl.Insert(movement.AsDefaultMovement());
-                _logger.LogInformation("Insert movement: {Movement} with Id:{Id}", movement, idMov);
-                return true;
+                _db.Checkpoint();
             }
         }
     }

@@ -15,7 +15,7 @@ if (Enum.TryParse<Commands>(command, true, out var cmd))
     switch (cmd)
     {
         case Commands.MIGRATE:
-            new MigrateAction().Execute();
+            new MigrateJsonToLiteDBAction().Execute();
             break;
     }
     return;
