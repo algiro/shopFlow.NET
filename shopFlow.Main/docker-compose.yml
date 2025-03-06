@@ -50,6 +50,15 @@ services:
       # - --skip-provider-button=true
     networks:
       - microservices
+  cli:
+    container_name: shop-flow-cli
+    image: algiro/shop-flow-cli:latest
+    volumes:
+      - type: bind
+        source: ${SHOP_FLOW_MOVS_VOLUME}
+        target: /data/shopFlowMovs
+    networks:
+      - microservices
 
 networks:
   microservices:
