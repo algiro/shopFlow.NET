@@ -1,4 +1,5 @@
 using shopFlow.Persistency;
+using shopFlow.Utils;
 
 namespace shopFlow.Services
 {
@@ -15,6 +16,7 @@ namespace shopFlow.Services
 
     public class DefaultMovementService(IMovementPersistency movementPersistency) : IMovementService
     {
+        private static readonly ILogger logger = LoggerUtils.CreateLogger<IMovementService>();
         public bool Open(DateTime dateTime, decimal amount)
         {
             try
@@ -24,7 +26,7 @@ namespace shopFlow.Services
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine("Error on MovementService.Open " + dateTime + " amount:" + amount + " error:" + ex);
+                logger.LogError("Error on MovementService.Open {DateTime}, amount:{Amount}, error:{Error}", dateTime , amount , ex);
                 return false;
             }
 
@@ -45,6 +47,11 @@ namespace shopFlow.Services
                     if (latestCardMov != null)
                     {
                         amountToPersist = card.Amount - latestCardMov.Amount;
+                        if (amountToPersist < 0)
+                        {
+                            logger.LogWarning("Close: card amount is less than the latest card movement amount, no movement will be saved");
+                            return false;
+                        }
                     }
                 }
                 var cardMovement = Movement.Create(dateTime, amountToPersist, MovementType.Deposit, SourceType.Card);
@@ -54,7 +61,7 @@ namespace shopFlow.Services
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine("Error on MovementService.Close " + dateTime + " cashAmount:" + cashAmount + " error:" + ex);
+                logger.LogError("Error on MovementService.Close {DateTime}, cashAmount:{CashAmount}, error:{Error}", dateTime, cashAmount, ex);
                 return false;
             }
 
