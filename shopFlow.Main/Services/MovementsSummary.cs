@@ -1,4 +1,6 @@
 
+using shopFlow.Utils;
+
 namespace shopFlow.Services {
 
     public interface IMovementsSummary {
@@ -29,6 +31,7 @@ namespace shopFlow.Services {
 
     public class DefaultMovementsSummary : IMovementsSummary
     {
+        private static readonly ILogger log = LoggerUtils.CreateLogger<DefaultMovementsSummary>();
         public DefaultMovementsSummary(IEnumerable<IMovement> movements)
         {
             var orderedMovements = movements.OrderBy(m => m.Date).ToArray();
@@ -44,41 +47,49 @@ namespace shopFlow.Services {
                 while (currDate <= ToDate) {
                     Console.Out.WriteLine("DefaultMovementsSummary handling date:" + currDate);
                     var dayMovements = movements.Where(m => DateOnly.FromDateTime(m.Date) == currDate).ToArray();
-                    Console.Out.WriteLine("DefaultMovementsSummary handling date:" + currDate + " dayMovements#: " + dayMovements.Length);
+                    if (dayMovements.Any())
+                    {
+                        log.LogInformation("DefaultMovementsSummary handling date: {Date} dayMovs#:{MovsCount}" ,currDate , dayMovements.Length);
 
-                    var openDrawerMov  = dayMovements.Where(m => m.Source == SourceType.Drawer && m.Type == MovementType.Open).OrderBy(m => m.Date).ToArray();
-                    var closeDrawerMov = dayMovements.Where(m => m.Source == SourceType.Drawer && m.Type == MovementType.Close).OrderBy(m => m.Date).ToArray();
-                    Console.Out.WriteLine("DefaultMovementsSummary handling date:" + currDate + " openDrawerMov#: " + openDrawerMov.Length + " closeDrawerMov#:" + closeDrawerMov.Length);
+                        var openDrawerMov = dayMovements.Where(m => m.Source == SourceType.Drawer && m.Type == MovementType.Open).OrderBy(m => m.Date).ToArray();
+                        var closeDrawerMov = dayMovements.Where(m => m.Source == SourceType.Drawer && m.Type == MovementType.Close).OrderBy(m => m.Date).ToArray();
+                        log.LogInformation("DefaultMovementsSummary handling date: {Date} openDrawerMov#:{OpenDrawerMovCount} closeDrawerMov#:{CloseDrawerMovCount}", currDate, openDrawerMov.Length, closeDrawerMov.Length);
 
-                    var dayCardMovements = dayMovements.Where(m => m.Source == SourceType.Card && !m.IsAnExpense());
-                    var cardAmount =  dayCardMovements.Sum(m => m.Amount);
-                    
-                    var dayCardMovementsToProcess = dayCardMovements;
+                        var dayCardMovements = dayMovements.Where(m => m.Source == SourceType.Card && !m.IsAnExpense());
+                        var cardAmount = dayCardMovements.Sum(m => m.Amount);
 
-                    var expenseAmount = dayMovements.Where(m => m.IsAnExpense()).Sum(m => m.Amount);
-                    totExpenseAmount += expenseAmount;
-                    totCardAmount += cardAmount;
+                        var dayCardMovementsToProcess = dayCardMovements;
 
-                    if (openDrawerMov.Length != closeDrawerMov.Length) {
-                        Console.Error.WriteLine(currDate + " drawer hasn't been closed properly");
-                        daySummaries.Add(MovementSummary.CreateDay(currDate,cashAmount:0,cardAmount,expenseAmount,new string[] {"drawer hasn't been closed properly"}));
-                    }
-                    else {
-                        for (int i=0;i<openDrawerMov.Length;i++) {
-                            var cashDiff = closeDrawerMov[i].Amount - openDrawerMov[i].Amount;
-                            Console.Out.WriteLine("DefaultMovementsSummary handling date:" + currDate + " close: " + closeDrawerMov[i].Amount + " open:" + openDrawerMov[i].Amount);
+                        var expenseAmount = dayMovements.Where(m => m.IsAnExpense()).Sum(m => m.Amount);
+                        totExpenseAmount += expenseAmount;
+                        totCardAmount += cardAmount;
 
-                            totCashAmount += cashDiff;
-                            decimal partialCardAmount = 0;
-                            var dtDeltaToCloseDrawerMov = closeDrawerMov[i].Date.AddSeconds(2);
-                            partialCardAmount = dayCardMovementsToProcess.Where(m => m.Date <= dtDeltaToCloseDrawerMov).Sum(m => m.Amount);
+                        if (openDrawerMov.Length != closeDrawerMov.Length)
+                        {
+                            log.LogWarning("DefaultMovementsSummary handling date: {Date} drawer hasn't been closed properly", currDate);
+                            daySummaries.Add(MovementSummary.CreateDay(currDate, cashAmount: 0, cardAmount, expenseAmount, new string[] { "drawer hasn't been closed properly" }));
+                        }
+                        else
+                        {
+                            var dayCashDiff = 0m;
+                            var dayCardAmount = 0m;
+                            for (int i = 0; i < openDrawerMov.Length; i++)
+                            {
+                                var cashDiff = closeDrawerMov[i].Amount - openDrawerMov[i].Amount;
+                                log.LogInformation("[{Index}] DefaultMovementsSummary handling date: {CurrDate} Close:{Close} - Open: {Open}", i,  currDate , closeDrawerMov[i].Amount , openDrawerMov[i].Amount);
 
-                            daySummaries.Add(MovementSummary.CreateDay(currDate,cashDiff,partialCardAmount,expenseAmount));
-                            dayCardMovementsToProcess = dayCardMovementsToProcess.Where(m => m.Date >= dtDeltaToCloseDrawerMov);
+                                totCashAmount += cashDiff;
+                                decimal partialCardAmount = 0;
+                                var dtDeltaToCloseDrawerMov = closeDrawerMov[i].Date.AddSeconds(2);
+                                partialCardAmount = dayCardMovementsToProcess.Where(m => m.Date <= dtDeltaToCloseDrawerMov).Sum(m => m.Amount);
+
+                                dayCashDiff += cashDiff;
+                                dayCardAmount += partialCardAmount;
+                                dayCardMovementsToProcess = dayCardMovementsToProcess.Where(m => m.Date >= dtDeltaToCloseDrawerMov);
+                            }
+                            daySummaries.Add(MovementSummary.CreateDay(currDate, dayCashDiff, dayCardAmount, expenseAmount));
                         }
                     }
-
-
                     currDate = currDate.AddDays(1);
                 }
                 CashAmount = totCashAmount;

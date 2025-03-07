@@ -1,4 +1,5 @@
 using shopFlow.Persistency;
+using shopFlow.Utils;
 
 namespace shopFlow.Services
 {
@@ -14,6 +15,7 @@ namespace shopFlow.Services
 
     public class DefaultExpenseService(IExpensesPersistency expensesPersistency) : IExpenseService
     {
+        private static readonly ILogger logger = LoggerUtils.CreateLogger<IExpenseService>();
         public bool Add(IExpense expense)
         {
             try
@@ -22,7 +24,7 @@ namespace shopFlow.Services
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine("Error on IExpenseService.Add " + expense + " error:" + ex);
+                logger.LogError("Error on ExpenseService.Add {Expense}, error:{Error}", expense, ex);
                 return false;
             }
         }
@@ -34,7 +36,7 @@ namespace shopFlow.Services
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine("Error on IExpenseService.Add " + expense + " error:" + ex);
+                logger.LogError("Error on ExpenseService.Delete {Expense}, error:{Error}", expense, ex);
                 return false;
             }
         }
@@ -46,7 +48,7 @@ namespace shopFlow.Services
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine("Error on IExpenseService.Add " + expense + " error:" + ex);
+                logger.LogError("Error on ExpenseService.Update {Expense}, error:{Error}", expense, ex);
                 return false;
             }
         }
