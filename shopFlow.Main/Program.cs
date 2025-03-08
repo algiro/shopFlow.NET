@@ -24,6 +24,7 @@ builder.Services.AddExpensesPersistency();
 builder.Services.AddScoped<IMovementService, DefaultMovementService>();
 builder.Services.AddScoped<IExpenseService, DefaultExpenseService>();
 builder.Services.AddBlazorBootstrap();
+builder.Services.AddHostedService<RecurringTaskService>();
 
 var app = builder.Build();
 ShopFlowConfig.SetConfigurationManger(builder.Configuration);
