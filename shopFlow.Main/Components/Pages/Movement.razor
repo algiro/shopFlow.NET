@@ -20,18 +20,18 @@
 else
 {
     <p> Create new movement </p>
-    <div class="form-group row">
-        <div class="col-2">
+    <div class="form-group row mb-3">
+        <div class="col-4 col-sm-5">
             <DateInput TValue="DateOnly" @bind-Value="@latestDo" Placeholder="Enter Mov. Date" />
         </div>
-        <label class="col-1 col-form-label"> Cash </label>
-        <div class="col-2">
+        <div class="col-1 col-sm-1 col-form-label"> <label for="cashAmount" class="form-label"> Cash </label></div>
+        <div class="col-3 col-sm-3 ms-1">
             <CurrencyInput TValue="decimal" Locale="es-ES" @bind-Value="@cashAmount" MinimumFractionDigits="2"
-                EnableMinMax="true" Min="0" Max="4999" Placeholder="Cash amount" />
+                EnableMinMax="true" Min="0" Max="4999" Placeholder="Cash amount" Id="cashAmount"/>
         </div>
         @if (LatestMovementType == null || LatestMovementType != MovementType.Open)
         {
-            <div class="col-1"> <Button Color="ButtonColor.Primary" @onclick="() => CreateOpenMovement()">Open</Button> </div>
+            <div class="col-1 col-sm-1"> <Button Color="ButtonColor.Primary" @onclick="() => CreateOpenMovement()">Open</Button> </div>
         }
         @if (LatestMovementType == MovementType.Open)
         {
@@ -179,4 +179,3 @@ else
     private TimeOnly CurrentTimeOnly => TimeOnly.FromDateTime(DateTime.Now);
     private DateTime GetMovementDT() => latestDo.ToDateTime(CurrentTimeOnly).AddSeconds(DateTime.Now.Second);
 }
-º

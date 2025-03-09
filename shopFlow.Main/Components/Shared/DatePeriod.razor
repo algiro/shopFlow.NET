@@ -1,16 +1,40 @@
-﻿@using shopFlow.Utils.Dates
-<div class="form-group row">
-    <label class="col-1 col-form-label">From Date: </label>
-    <div class="col-2">
+﻿@using shopFlow.Utils
+@using shopFlow.Utils.Dates
+<div class="form-group row mb-3">
+    <div class="col-1 col-sm-1 col-form-label"> <label>From: </label> </div>
+    <div class="col-2 col-sm-4 ms-1">
         <DateInput TValue="DateOnly" @bind-Value="@fromDate" Placeholder="From Date" />
     </div>
-    <label class="col-1 col-form-label">To Date: </label>
-    <div class="col-2">
+    <div class="col-2 col-sm-1 ms-1">
+        <label>To:</label>
+    </div>
+    <div class="col-2 col-sm-4 ms-1">
         <DateInput TValue="DateOnly" @bind-Value="@toDate" Placeholder="To Date" />
     </div>
-    <div class="col-1">
+    <div class="col-1 col-sm-1">
         <Button Color="ButtonColor.Primary" @onclick="Search">Search</Button>
     </div>
+    <div class="row mt-2">
+        <div class="col-1 col-sm-2">
+            <Button Color="ButtonColor.Secondary" @onclick="Today">Today</Button>
+        </div>
+        <div class="col-1 col-sm-2">
+            <Button Color="ButtonColor.Secondary" @onclick="ThisWeek">This Week</Button>
+        </div>
+        <div class="col-1 col-sm-2">
+            <Button Color="ButtonColor.Secondary" @onclick="Forward7Day">+7</Button>
+        </div>
+        <div class="col-1 col-sm-2">
+            <Button Color="ButtonColor.Secondary" @onclick="Forward1Day">+1</Button>
+        </div>
+        <div class="col-1 col-sm-2">
+            <Button Color="ButtonColor.Secondary" @onclick="Back1Day">-1</Button>
+        </div>
+        <div class="col-1 col-sm-2">
+            <Button Color="ButtonColor.Secondary" @onclick="Back7Day">-7</Button>
+        </div>
+    </div>
+
 </div>
 
 @code {
@@ -36,6 +60,36 @@
 
         await OnSearch.InvokeAsync(values); // Pass the DatePeriodValues object
     }
+    private async Task Today()
+    {
+        fromDate = DateOnly.FromDateTime(DateTime.UtcNow);
+        toDate = DateOnly.FromDateTime(DateTime.UtcNow);
+        await Search();
+    }
 
+    private async Task ThisWeek()
+    {
+        var startOfWeek = DateTime.UtcNow.StartOfWeek();
+        fromDate = DateOnly.FromDateTime(startOfWeek);
+        toDate = fromDate.AddDays(6);
+        await Search();
+    }
+    private async Task Forward1Day()
+    {
+        fromDate = fromDate.AddDays(1);
+        toDate = toDate.AddDays(1);
+        await Search();
+    }
+	private async Task Forward7Day() => await MoveDatePeriod(7);
+	private async Task Back7Day() => await MoveDatePeriod(-7);
+	private async Task Back1Day() => await MoveDatePeriod(-1);
+
+
+	private async Task MoveDatePeriod(int days)
+	{
+		fromDate = fromDate.AddDays(days);
+		toDate = toDate.AddDays(days);
+		await Search();
+	}
 
 }
