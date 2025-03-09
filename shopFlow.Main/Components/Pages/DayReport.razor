@@ -1,6 +1,8 @@
 ﻿@page "/dayReport"
 @using shopFlow.Services
 @using System.Linq;
+@using shopFlow.Utils.Dates
+@using shopFlow.Components.Shared
 
 @attribute [StreamRendering]
 @rendermode InteractiveServer
@@ -10,16 +12,8 @@
 
 
 <h1>Day Report</h1>
-<div class="form-group row">
-    <label class="col-1 col-form-label">From Date:</label>
-    <div class="col-2">
-        <DateInput TValue="DateOnly" @bind-Value="@fromDate" Placeholder="Enter Mov. Date" />
-    </div>
-    <label class="col-1 col-form-label">To Date: </label>
-    <div class="col-2">
-        <DateInput TValue="DateOnly" @bind-Value="@toDate" Placeholder="Enter Mov. Date" />
-    </div>
-    <div class="col-1"> <Button Color="ButtonColor.Primary" @onclick="() => SearchMovement()">Search</Button> </div>
+<div>
+    <DatePeriod OnSearch="@SearchMovement" />
 </div>
 <div>
     <div class="mb-3">
@@ -105,13 +99,17 @@
     private IMovementsSummary? movementsSummary = null;
     protected override Task OnInitializedAsync()
     {
-        SearchMovement();
+        SearchMovement(datePeriodValues);
         fromDate = DateOnly.FromDateTime(DateTime.UtcNow);
         toDate = DateOnly.FromDateTime(DateTime.UtcNow);
         return Task.CompletedTask;
     }
-    protected void SearchMovement()
+
+    private DatePeriodValues datePeriodValues => new DatePeriodValues { FromDate = fromDate, ToDate = toDate };
+    protected void SearchMovement(DatePeriodValues datePeriod)
     {
+        fromDate = datePeriod.FromDate;
+        toDate = datePeriod.ToDate;
         movements = MovementService.GetMovements(fromDate, toDate);
         var expenses = ExpenseService.GetExpenses(fromDate, toDate);
         movementsSummary = MovementSummary.Create(movements.Concat(expenses));
