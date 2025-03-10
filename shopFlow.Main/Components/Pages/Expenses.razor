@@ -25,7 +25,7 @@ else
     <div class="form-group row">
         <label class="col-1 col-form-label"> Date:</label>
         <div class="col-2">
-            <DateInput TValue="DateTime" @bind-Value="@now" Placeholder="Enter Mov. Date" />
+            <DateInput TValue="DateOnly" @bind-Value="@movTimeDate" Placeholder="Enter Mov. Date" />
         </div>
         <label class="col-1 col-form-label"> Expense Type:</label>
         <div class="col-1">
@@ -51,7 +51,7 @@ else
         <label class="col-1 col-form-label">Amount: </label>
         <div class="col-1">
             <CurrencyInput TValue="decimal" Locale="es-ES" @bind-Value="@Amount" MinimumFractionDigits="2"
-                EnableMinMax="true" Min="0" Max="4999" Placeholder="Amount" />
+            EnableMinMax="true" Min="0" Max="4999" Placeholder="Amount" />
         </div>
         <label class="col-1 col-form-label">Description: </label>
         <div class="col-2">
@@ -67,28 +67,28 @@ else
         <Tab Title="Details" Active="true">
             <Content>
                 <Grid @ref="expGrid" TItem="IExpense" Class="table table-hover table-bordered table-striped"
-                    DataProvider="ExpensesDataProvider" AllowFiltering="true" AllowPaging="true" PageSize="30"
-                    AllowSorting="true" AllowSelection="true" SelectionMode="GridSelectionMode.Multiple"
-                    SelectedItemsChanged="OnSelectedItemsChanged" Responsive="true">
+                DataProvider="ExpensesDataProvider" AllowFiltering="true" AllowPaging="true" PageSize="30"
+                AllowSorting="true" AllowSelection="true" SelectionMode="GridSelectionMode.Multiple"
+                SelectedItemsChanged="OnSelectedItemsChanged" Responsive="true">
 
                     <GridColumns>
                         <GridColumn TItem="IExpense" HeaderText="Date" PropertyName="Date"
-                            SortKeySelector="item => item.Date">
+                        SortKeySelector="item => item.Date">
                             @context.Date.ToString("dd-MM-yyyy HH:mm:ss")
                         </GridColumn>
                         <GridColumn TItem="IExpense" HeaderText="Type" PropertyName="Type">
                             @context.Type
                         </GridColumn>
                         <GridColumn TItem="IExpense" HeaderText="ExpenseType" PropertyName="ExpType"
-                            SortKeySelector="item => item.ExpType">
+                        SortKeySelector="item => item.ExpType">
                             @context.ExpType
                         </GridColumn>
                         <GridColumn TItem="IExpense" HeaderText="Supplies" PropertyName="Supplies"
-                            SortKeySelector="item => item.Supplies">
+                        SortKeySelector="item => item.Supplies">
                             @context.Supplies
                         </GridColumn>
                         <GridColumn TItem="IExpense" HeaderText="Amount" PropertyName="Amount"
-                            SortKeySelector="item => item.Amount">
+                        SortKeySelector="item => item.Amount">
                             @context.Amount
                         </GridColumn>
                         <GridColumn TItem="IExpense" Filterable="false" Sortable="false">
@@ -199,7 +199,7 @@ else
     private IEnumerable<IExpense> expenses = Enumerable.Empty<IExpense>();
 
     private IExpense[] OrderedExpenses => expenses.OrderBy(m => m.Date).ToArray();
-    private DateTime now;
+    private DateOnly movTimeDate;
     private decimal Amount { get; set; } = 0;
     private string ExpType { get; set; } = "Other";
     private string Supplies { get; set; } = "";
@@ -215,9 +215,9 @@ else
     Tabs tabs = default!;
     protected override async Task OnInitializedAsync()
     {
-        now = DateTime.UtcNow;
-        fromDate = new DateOnly(now.Year, now.Month, 1);
-        toDate = new DateOnly(now.Year, now.Month, DateTime.DaysInMonth(now.Year, now.Month));
+        movTimeDate = DateOnly.FromDateTime(DateTime.UtcNow);
+        fromDate = new DateOnly(movTimeDate.Year, movTimeDate.Month, 1);
+        toDate = new DateOnly(movTimeDate.Year, movTimeDate.Month, DateTime.DaysInMonth(movTimeDate.Year, movTimeDate.Month));
 
         await ReloadExpenses(datePeriodValues);
         LoadExpTypesAndSupplies();
@@ -253,12 +253,8 @@ else
         message2: "Do you want to proceed?");
         if (confirmation)
         {
-            if (now.TimeOfDay.Hours == 0 && now.TimeOfDay.Minutes == 0 && now.TimeOfDay.Seconds == 0)
-            {
-                var utcNow = DateTime.UtcNow;
-                now = now.Add(utcNow.TimeOfDay);
-            }
-            var movement = shopFlow.Services.Movement.Create(now, Amount, MovementType.Expense, SourceType.Card);
+            var movTimestamp = movTimeDate.ToDateTime(TimeOnly.FromDateTime(DateTime.UtcNow));
+            var movement = shopFlow.Services.Movement.Create(movTimestamp, Amount, MovementType.Expense, SourceType.Card);
             Console.WriteLine("CreateExpenses.... ExpType:" + ExpType + " Supplies:" + Supplies);
 
             var expense = shopFlow.Services.Expense.Create(movement, ExpType, Supplies, Description);
@@ -315,7 +311,7 @@ else
         suppliesExpensesSummary = ExpensesSummary.CreateGroupedBySupplies(expenses);
         typeExpensesSummary = ExpensesSummary.CreateGroupedByExpType(expenses);
         periodExpensesSummaries = ExpensesSummary.CreateGroupedByWeeks(expenses);
-        now = DateTime.UtcNow;
+
         if (expGrid != null)
         {
             await expGrid.RefreshDataAsync();
