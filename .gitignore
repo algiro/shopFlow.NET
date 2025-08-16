@@ -6,3 +6,5 @@
 .vs
 .fake
 .env
+
+*client_secret.json
