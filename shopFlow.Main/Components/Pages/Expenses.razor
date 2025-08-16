@@ -1,5 +1,6 @@
 ﻿@page "/expenses"
 @using shopFlow.Config
+@using shopFlow.Importer.Providers
 @using shopFlow.Services
 @using System.Linq;
 @using shopFlow.Components.Shared
@@ -22,6 +23,7 @@ else
 {
     <Button Color="ButtonColor.Secondary" @onclick="() => EditExpTypes()">Expenses Types</Button>
     <Button Color="ButtonColor.Dark" @onclick="() => EditSupplies()">Supplies List</Button>
+    <Button Color="ButtonColor.Dark" @onclick="() => LookupPendingInvoices()">Lookup Invoices</Button>
     <div class="form-group row">
         <label class="col-1 col-form-label"> Date:</label>
         <div class="col-2">
@@ -317,6 +319,11 @@ else
             await expGrid.RefreshDataAsync();
         }
         selectedSupplies = null;
+    }
+
+    protected async Task LookupPendingInvoices()
+    {        
+        await modal.ShowAsync<InvoiceLookup>(title: "Invoice Lookup", parameters: new Dictionary<string, object>());
     }
     private string? selectedSupplies;
     private async Task GetDetailsBySupplies(string supplies)

@@ -1,0 +1,102 @@
+﻿@using shopFlow.Importer.Domain
+@using shopFlow.Importer.Providers
+@using shopFlow.Persistency
+@using shopFlow.Services
+
+@attribute [StreamRendering]
+@rendermode InteractiveServer
+@inject IInvoicesLookup invoiceLookup;
+@inject IExpenseService ExpenseService;
+
+<Modal @ref="modal" />
+<ConfirmDialog @ref="dialog" />
+
+<p> Invoice Lookup </p>
+<table>
+    <thead>
+        <tr>
+            <th>Invoice ID</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var invoiceId in Invoices)
+        {
+            <tr>
+                <td>@invoiceId</td>
+                <td>
+                    <button class="btn btn-primary"
+                            @onclick="() => GetInvoiceInfo(invoiceId)">
+                        Select
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<div>
+    @if (invoinceInfo != null)
+    {
+        <div>
+            <h3>Invoice Details</h3>
+            <p><strong>Supplier:</strong> @invoinceInfo.SupplierName</p>
+            <p><strong>Invoice Number:</strong> @invoinceInfo.InvoiceNumber</p>
+            <p><strong>Date:</strong> @invoinceInfo.InvoiceDate.ToShortDateString()</p>
+            <p><strong>Total Amount:</strong> @invoinceInfo.TotalAmount.ToString("C")</p>
+            <button class="btn btn-success" @onclick="() => ImportAsExpense(invoinceInfo)">
+                Import as Expenses
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    private Modal modal = default!;
+    private ConfirmDialog? dialog;
+    private IEnumerable<string> Invoices { get; set; } = Enumerable.Empty<string>();
+    private IInvoiceInfo? invoinceInfo = null;
+
+    [Parameter] public EventCallback<IExpense> OnClickCallback { get; set; }
+
+    protected override Task OnInitializedAsync()
+    {
+        Invoices = invoiceLookup.GetInvoicesIds();
+        return Task.CompletedTask;
+    }
+
+    private Task GetInvoiceInfo(string invoiceId)
+    {
+        var invoiceStream = invoiceLookup.GetInvoiceById(invoiceId);
+        if (InvoiceProviders.TryGetInvoiceProvider(invoiceId, out var invoiceProvider))
+        {
+            invoinceInfo = invoiceProvider.GetInvoiceInfo(invoiceStream);
+        }
+        return Task.CompletedTask;
+    }
+
+    private async Task ImportAsExpense(IInvoiceInfo invoiceInfo)
+    {
+        Console.WriteLine("ImportAsExpense....");
+        var movTimestamp = invoiceInfo.InvoiceDate;
+        var confirmation = await dialog!.ShowAsync(
+        title: "Are you sure you want to Import it as expense?",
+        message1: $"You are creating it with {invoiceInfo.TotalAmount}€ for Supplier :{invoiceInfo.SupplierName} at date:{movTimestamp}",
+        message2: "Do you want to proceed?");
+        if (confirmation)
+        {
+            var invoiceDate = DateOnly.FromDateTime(invoiceInfo.InvoiceDate);
+            var expenses = ExpenseService.GetExpenses(invoiceDate, invoiceDate);
+            if (expenses.Any(e => e.Amount == invoiceInfo.TotalAmount))
+            {
+                await dialog.ShowAsync("Warning", "You already have and expense with the same amount in the same date", new ConfirmDialogOptions { YesButtonText="OK", NoButtonColor = ButtonColor.None, NoButtonText = ""});
+                return;
+            }
+            var movement = shopFlow.Services.Movement.Create(movTimestamp, invoiceInfo.TotalAmount, MovementType.Expense, SourceType.Card);
+
+            ExpenseTypeHelper.TryFindExpenseType(invoiceInfo.SupplierName, out var expenseType);
+            var expense = shopFlow.Services.Expense.Create(movement, expenseType, invoiceInfo.SupplierName, "Imported Invoice:" + invoiceInfo.InvoiceNumber);
+            var expenseStatus = ExpenseService.Add(expense);
+            await modal.HideAsync();
+        }
+    }
+}

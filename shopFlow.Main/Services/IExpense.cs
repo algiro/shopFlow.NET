@@ -1,4 +1,5 @@
 
+using iText.Layout.Splitting;
 using Newtonsoft.Json;
 
 namespace shopFlow.Services {
@@ -62,5 +63,31 @@ namespace shopFlow.Services {
     public static class ExpenseHelper {
         public static string GetId(this IExpense expense) => $"{expense.Date.ToString("yyyy-MM-dd_HH-mm-ss")}_{expense.Type}_EXP";
         public static string GetFileName(this IExpense expense)  => expense.GetId() + ".json";
+    }
+
+    public static class ExpenseTypeHelper
+    {
+        public static bool TryFindExpenseType(string supplier, out ExpenseType expenseType)
+        {
+            expenseType = ExpenseType.Other;
+            switch (supplier)
+            {
+                case "Hiperdino":
+                    expenseType = ExpenseType.Food;
+                    return true;
+                case "Makro":
+                    expenseType = ExpenseType.Food;
+                    return true;
+                case "Mercadona":
+                    expenseType = ExpenseType.Food;
+                    return true;
+                case "CocaCola":
+                    expenseType = ExpenseType.Drink;
+                    return true;
+                default:
+                    return false;
+            }
+            
+        }
     }
 }
