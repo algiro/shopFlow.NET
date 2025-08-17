@@ -10,5 +10,6 @@ namespace shopFlow.Importer.Providers
     {
         IEnumerable<string> GetInvoicesIds();
         Stream GetInvoiceById(string id);
+        Task MoveInvoiceToImportedFolderAsync(string invoiceId);
     }
 }

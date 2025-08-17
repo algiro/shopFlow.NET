@@ -55,13 +55,21 @@
     private ConfirmDialog? dialog;
     private IEnumerable<string> Invoices { get; set; } = Enumerable.Empty<string>();
     private IInvoiceInfo? invoinceInfo = null;
+    private string invoiceId = string.Empty;    
 
     [Parameter] public EventCallback<IExpense> OnClickCallback { get; set; }
 
     protected override Task OnInitializedAsync()
     {
-        Invoices = invoiceLookup.GetInvoicesIds();
+        ReloadInvoices();
         return Task.CompletedTask;
+    }
+
+    private void ReloadInvoices()
+    {
+        Invoices = invoiceLookup.GetInvoicesIds();
+        invoinceInfo = null;
+        invoiceId = string.Empty;
     }
 
     private Task GetInvoiceInfo(string invoiceId)
@@ -70,6 +78,11 @@
         if (InvoiceProviders.TryGetInvoiceProvider(invoiceId, out var invoiceProvider))
         {
             invoinceInfo = invoiceProvider.GetInvoiceInfo(invoiceStream);
+            this.invoiceId = invoiceId;
+        }
+        else
+        {
+            this.invoiceId = string.Empty;
         }
         return Task.CompletedTask;
     }
@@ -96,6 +109,8 @@
             ExpenseTypeHelper.TryFindExpenseType(invoiceInfo.SupplierName, out var expenseType);
             var expense = shopFlow.Services.Expense.Create(movement, expenseType, invoiceInfo.SupplierName, "Imported Invoice:" + invoiceInfo.InvoiceNumber);
             var expenseStatus = ExpenseService.Add(expense);
+            await invoiceLookup.MoveInvoiceToImportedFolderAsync(invoiceId);
+            ReloadInvoices();
             await modal.HideAsync();
         }
     }

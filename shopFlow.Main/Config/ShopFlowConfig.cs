@@ -11,6 +11,8 @@ namespace shopFlow.Config
 
         string HealtCheckUrl { get; }
         int    HealtCheckIntervalSec { get; }
+        IGDriveConfig GDriveConfig { get; }
+
     }
     public class ShopFlowConfig
     {
@@ -36,8 +38,15 @@ namespace shopFlow.Config
                 } 
             }
 
+            public IGDriveConfig GDriveConfig { get; } = new GDriveConfig();
             public string[] GetSupplies() => ExpensesConfigPersistency.LoadSupplies().ToArray();
             public string[] GetExpensesTypes() => ExpensesConfigPersistency.LoadExpTypes().ToArray();
         }
+    }
+    public class GDriveConfig : IGDriveConfig
+    {
+        public string CredentialPath => Environment.GetEnvironmentVariable("GDRIVE_CREDENTIAL_PATH") ?? "";
+        public string PendingFolderId => Environment.GetEnvironmentVariable("GDRIVE_PENDING_FOLDER_ID") ?? "";
+        public string ImportedFolderId => Environment.GetEnvironmentVariable("GDRIVE_IMPORTED_FOLDER_ID") ?? "";
     }
 }

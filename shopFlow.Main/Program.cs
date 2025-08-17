@@ -1,9 +1,10 @@
-using shopFlow.Config;
-using shopFlow.Components;
-using shopFlow.Services;
-using shopFlow.Persistency;
 using BlazorBootstrap;
+using shopFlow.Components;
+using shopFlow.Config;
+using shopFlow.Importer.Providers;
+using shopFlow.Persistency;
 using shopFlow.Persistency.Impl;
+using shopFlow.Services;
 using shopFlow.Utils;
 using System.IO.Abstractions;
 
@@ -12,6 +13,7 @@ ILogger logger = LoggerUtils.CreateLogger<Program>();
 logger.LogInformation("Starting ShopFlow");
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("/config/appsettings.Development.json", true, true);
+ShopFlowConfig.SetConfigurationManger(builder.Configuration);
 
 // Add services to the container.
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
@@ -26,8 +28,11 @@ builder.Services.AddScoped<IExpenseService, DefaultExpenseService>();
 builder.Services.AddBlazorBootstrap();
 builder.Services.AddHostedService<RecurringTaskService>();
 
+var gdriveConfig = ShopFlowConfig.Instance.GDriveConfig;
+var provider = new GDriveInvoicesLookup(gdriveConfig.CredentialPath, (gdriveConfig.PendingFolderId, gdriveConfig.ImportedFolderId), LoggerUtils.CreateLogger<GDriveInvoicesLookup>());
+builder.Services.AddSingleton<IInvoicesLookup>(provider);
+
 var app = builder.Build();
-ShopFlowConfig.SetConfigurationManger(builder.Configuration);
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

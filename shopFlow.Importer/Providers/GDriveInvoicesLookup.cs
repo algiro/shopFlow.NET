@@ -7,27 +7,28 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
 
 namespace shopFlow.Importer.Providers
 {
     public class GDriveInvoicesLookup : IInvoicesLookup, IDisposable
     {
         private readonly DriveService _driveService;
-        private readonly string _folderId;
+        private readonly (string pending, string imported) _foldersId;
         private readonly ILogger _logger;
 
         public GDriveInvoicesLookup(
             string credentialsPath,
-            string folderId,
+            (string pending,string imported) folderIds,
             ILogger logger)
         {
-            _folderId = folderId ?? throw new ArgumentNullException(nameof(folderId));
+            _foldersId = folderIds;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             try
             {
                 var credential = GoogleCredential.FromFile(credentialsPath)
-                    .CreateScoped(DriveService.ScopeConstants.DriveReadonly);
+                    .CreateScoped(DriveService.ScopeConstants.Drive);
 
                 _driveService = new DriveService(new BaseClientService.Initializer()
                 {
@@ -47,7 +48,7 @@ namespace shopFlow.Importer.Providers
             try
             {
                 var request = _driveService.Files.List();
-                request.Q = $"'{_folderId}' in parents and trashed = false";
+                request.Q = $"'{_foldersId.pending}' in parents and trashed = false";
                 request.Fields = "files(id, name)";
 
                 var result = request.Execute();
@@ -68,7 +69,7 @@ namespace shopFlow.Importer.Providers
             try
             {
                 var request = _driveService.Files.List();
-                request.Q = $"'{_folderId}' in parents and name = '{id}' and trashed = false";
+                request.Q = $"'{_foldersId.pending}' in parents and name = '{id}' and trashed = false";
                 request.Fields = "files(id)";
 
                 var result = request.Execute();
@@ -91,7 +92,39 @@ namespace shopFlow.Importer.Providers
                 return null;
             }
         }
+        public async Task MoveInvoiceToImportedFolderAsync(string invoiceId)
+        {
+            try
+            {
+                var request = _driveService.Files.List();
+                request.Q = $"'{_foldersId.pending}' in parents and name = '{invoiceId}' and trashed = false";
+                request.Fields = "files(id)";
 
+                var result = await request.ExecuteAsync();
+                var file = result.Files.FirstOrDefault();
+
+                if (file == null)
+                {
+                    _logger.LogWarning("Invoice with ID {InvoiceId} not found", invoiceId);
+                    return;
+                }
+
+                // Create a NEW, EMPTY File object for the update
+                var emptyFile = new Google.Apis.Drive.v3.Data.File();
+
+                var updateRequest = _driveService.Files.Update(emptyFile, file.Id);
+                updateRequest.AddParents = _foldersId.imported;
+                updateRequest.RemoveParents = _foldersId.pending;
+
+                await updateRequest.ExecuteAsync();
+
+                _logger.LogInformation("Moved invoice {InvoiceId} to imported folder", invoiceId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to move invoice {InvoiceId} to imported folder", invoiceId);
+            }
+        }
         private bool IsInvoiceFile(string fileName)
         {
             return InvoiceProviders.TryGetInvoiceProvider(fileName, out _);
