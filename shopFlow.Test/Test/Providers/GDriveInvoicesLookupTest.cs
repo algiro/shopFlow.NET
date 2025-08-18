@@ -20,7 +20,7 @@ namespace shopFlow.Test.Test.Providers
             var credentialsPath = "./Resources/client_secret.json"; // Update with actual path
             var folderId = "1KH67uMcVSozSMls3Rxka_6qqaJS8N2XY"; // Update with actual folder ID
             var logger = new Mock<ILogger<GDriveInvoicesLookup>>().Object;
-            var provider = new GDriveInvoicesLookup(credentialsPath, folderId, logger);
+            var provider = new GDriveInvoicesLookup(credentialsPath, (folderId,""), logger);
             // Act
             var ids = provider.GetInvoicesIds();
             // Assert
@@ -34,7 +34,7 @@ namespace shopFlow.Test.Test.Providers
             var credentialsPath = "./Resources/client_secret.json"; // Update with actual path
             var folderId = "1KH67uMcVSozSMls3Rxka_6qqaJS8N2XY"; // Update with actual folder ID
             var logger = new Mock<ILogger<GDriveInvoicesLookup>>().Object;
-            var provider = new GDriveInvoicesLookup(credentialsPath, folderId, logger);
+            var provider = new GDriveInvoicesLookup(credentialsPath, (folderId, ""), logger);
             // Act
             var ids = provider.GetInvoicesIds();
             var firstId = ids.FirstOrDefault();
@@ -47,6 +47,24 @@ namespace shopFlow.Test.Test.Providers
             invoiceInfo.SupplierName.Should().NotBeNullOrEmpty();
 
 
+        }
+
+        [Test]
+        public async Task MoveInvoiceToImportedFolderAsync_ValidInvoice_MovesSuccessfully()
+        {
+            // Arrange
+            var credentialsPath = "./Resources/client_secret.json"; // Update with actual path
+            var pendingFolderId = "1KH67uMcVSozSMls3Rxka_6qqaJS8N2XY"; // Update with actual folder ID
+            var importedFolderId = "1RShSzOUmLAx37yN8iO4CSKDJtjRaRinX"; // Update with actual folder ID
+            var logger = new Mock<ILogger<GDriveInvoicesLookup>>().Object;
+            var provider = new GDriveInvoicesLookup(credentialsPath, (pendingFolderId, importedFolderId), logger);
+            var ids = provider.GetInvoicesIds();
+            var firstId = ids.FirstOrDefault();
+            var stream = provider.GetInvoiceById(firstId);
+            InvoiceProviders.TryGetInvoiceProvider(firstId, out var invoiceProvider);
+            var invoiceInfo = invoiceProvider.GetInvoiceInfo(stream);
+            // Act
+            await provider.MoveInvoiceToImportedFolderAsync(firstId, invoiceInfo);
         }
     }
 }

@@ -5,7 +5,10 @@
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "MOV_PERSISTENCY_TYPE": "LiteDB"
+        "MOV_PERSISTENCY_TYPE": "LiteDB",
+        "GDRIVE_CREDENTIAL_PATH": "./Config/client_secret.json",
+        "GDRIVE_PENDING_FOLDER_ID": "1KH67uMcVSozSMls3Rxka_6qqaJS8N2XY",
+        "GDRIVE_IMPORTED_FOLDER_ID": "1F-QGRlIXfGfwWD8vrGmZPAkrONK8aD1y"
       },
       "dotnetRunMessages": true,
       "applicationUrl": "http://localhost:5233"

@@ -1,4 +1,5 @@
 using BlazorBootstrap;
+using NLog;
 using shopFlow.Components;
 using shopFlow.Config;
 using shopFlow.Importer.Providers;
@@ -8,9 +9,15 @@ using shopFlow.Services;
 using shopFlow.Utils;
 using System.IO.Abstractions;
 
-ILogger logger = LoggerUtils.CreateLogger<Program>();
+var logLayout = "${longdate}|${level:uppercase=true}|${logger}|${message} ${exception:format=ToString}";
+LogManager.Setup().LoadConfiguration(
+    builder => { 
+        builder.ForLogger().FilterMinLevel(NLog.LogLevel.Info).WriteToConsole(logLayout);
+    });
 
-logger.LogInformation("Starting ShopFlow");
+var logger = LogManager.GetCurrentClassLogger();
+logger.Info("Starting ShopFlow");
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("/config/appsettings.Development.json", true, true);
 ShopFlowConfig.SetConfigurationManger(builder.Configuration);

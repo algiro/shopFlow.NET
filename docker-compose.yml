@@ -1,0 +1,27 @@
+services:
+  web:
+    container_name: shop-flow-web
+    environment:
+      APP_VERSION: "0.1.1"
+      MOV_PERSISTENCY_TYPE: "LiteDB"
+      HEALTH_CHECK_URL: ${HEALTH_CHECK_URL}
+      GDRIVE_CREDENTIAL_PATH: ${GDRIVE_CREDENTIAL_PATH}
+      GDRIVE_PENDING_FOLDER_ID: ${GDRIVE_PENDING_FOLDER_ID}
+      GDRIVE_IMPORTED_FOLDER_ID: ${GDRIVE_IMPORTED_FOLDER_ID}
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+    image: algiro/shop-flow-net:latest
+    volumes:
+      - type: bind
+        source: ${SHOP_FLOW_MOVS_VOLUME}
+        target: /data/shopFlowMovs
+    ports:
+      - 8080:8080
+    networks:
+      - microservices
+
+networks:
+  microservices:
+
+volumes:
+  shopFlowMovs:

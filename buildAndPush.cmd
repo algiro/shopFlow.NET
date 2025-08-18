@@ -17,6 +17,6 @@ echo Version: %appVersion%
 set varCheck=[Environment]::GetEnvironmentVariable("ps_version", "User")
 echo %varCheck%
 
-echo docker build -f .\shopFlow.Main\Dockerfile . -t algiro/sfc-test:%appVersion%
-docker build -f .\shopFlow.Main\Dockerfile . -t algiro/sfc-test:%appVersion%
-docker push algiro/sfc-test:%appVersion%
+echo docker build -f .\shopFlow.Main\Dockerfile . -t algiro/shop-flow-net:%appVersion%
+docker build -f .\shopFlow.Main\Dockerfile . -t algiro/shop-flow-net:%appVersion%
+docker push algiro/shop-flow-net:%appVersion%

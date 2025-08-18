@@ -1,4 +1,5 @@
-﻿using System;
+﻿using shopFlow.Importer.Domain;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,6 @@ namespace shopFlow.Importer.Providers
     {
         IEnumerable<string> GetInvoicesIds();
         Stream GetInvoiceById(string id);
-        Task MoveInvoiceToImportedFolderAsync(string invoiceId);
+        Task MoveInvoiceToImportedFolderAsync(string invoiceId, IInvoiceInfo invoiceInfo);
     }
 }

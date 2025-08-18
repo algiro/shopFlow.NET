@@ -109,7 +109,7 @@
             ExpenseTypeHelper.TryFindExpenseType(invoiceInfo.SupplierName, out var expenseType);
             var expense = shopFlow.Services.Expense.Create(movement, expenseType, invoiceInfo.SupplierName, "Imported Invoice:" + invoiceInfo.InvoiceNumber);
             var expenseStatus = ExpenseService.Add(expense);
-            await invoiceLookup.MoveInvoiceToImportedFolderAsync(invoiceId);
+            await invoiceLookup.MoveInvoiceToImportedFolderAsync(invoiceId,invoiceInfo);
             ReloadInvoices();
             await modal.HideAsync();
         }

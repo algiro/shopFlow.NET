@@ -17,7 +17,7 @@ namespace shopFlow.Test.Test.Providers
             using var stream = File.OpenRead("./Resources/InvoiceSamples/TICKET_PDF_NUM_250617.9370.0011.00053115.PDF");
             var info = provider.GetInvoiceInfo(stream);
 
-            Assert.Equal("DinoSol", info.SupplierName);
+            Assert.Equal("Hiperdino", info.SupplierName);
             Assert.Equal("250617.9370.0011.00053115", info.InvoiceNumber);
             Assert.Equal(new DateTime(2025, 6, 17, 0, 0, 0), info.InvoiceDate);
             Assert.Equal(89.38m, info.TotalAmount);
@@ -27,6 +27,6 @@ namespace shopFlow.Test.Test.Providers
             var firstItem = items.First();
             firstItem.Name.Should().Be("DINO LECHE CONDESADA LATA ENTER");
             firstItem.Total.Should().Be(3.02m);
-        }
+        }       
     }
 }

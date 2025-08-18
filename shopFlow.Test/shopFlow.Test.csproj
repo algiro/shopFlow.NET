@@ -33,6 +33,9 @@
     <None Update="Resources\InvoiceSamples\00%28021%290205%282025%29002727.pdf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Resources\InvoiceSamples\A-G2025-369554.pdf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Resources\InvoiceSamples\TICKET_PDF_NUM_250617.9370.0011.00053115.PDF">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

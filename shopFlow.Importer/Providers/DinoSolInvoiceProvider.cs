@@ -1,15 +1,20 @@
+using Microsoft.Extensions.Logging;
+using NLog;
+using shopFlow.Importer.Domain;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
-using shopFlow.Importer.Domain;
 
 namespace shopFlow.Importer.Providers
 {
     public class DinoSolInvoiceProvider : IInvoiceProvider
     {
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+
         private static readonly Dictionary<string, int> SpanishMonths = new()
         {
             { "ene", 1 }, { "feb", 2 }, { "mar", 3 }, { "abr", 4 },
@@ -32,26 +37,33 @@ namespace shopFlow.Importer.Providers
             var invoiceInfo = new InvoiceInfo();
             invoiceInfo.SupplierName = "Hiperdino";
             var items = new List<IInvoiceItem>();
+            
+            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+            Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
 
             using (IPdfDocumentHelper pdfDocumentHelper = PdfDocumentHelper.Create(stream))
             {
                 while (pdfDocumentHelper.NextPage())
                 {
                     var text = pdfDocumentHelper.GetPageContent();
-                    
-                    // Invoice Number
-                    var invoiceLabel = "FACTURA Nº:";
-                    var idx = text.IndexOf(invoiceLabel);
-                    if (idx >= 0)
-                    {
-                        var after = text.Substring(idx + invoiceLabel.Length).Trim();
-                        var invoiceNumber = after.Split('\n', '\r')[0].Trim();
-                        invoiceInfo.InvoiceNumber = invoiceNumber;
+                    // Invoice
+                    var invoiceRegExp = @"(FACTURA N.:)\s+([\d\.]*)";
+                    var invoiceMatch = Regex.Match(text, invoiceRegExp);
+                    if (invoiceMatch.Success) {
+                        invoiceInfo.InvoiceNumber = invoiceMatch.Groups[2].Value.Trim();
+                        logger.Info($"Processing page: {pdfDocumentHelper.CurrentPageNumber}, found invoice number: {invoiceInfo.InvoiceNumber}");
                     }
+                    else
+                    {
+                        logger.Warn($"Processing page: {pdfDocumentHelper.CurrentPageNumber}, no invoice number found in text: {text}");
+                    }
+                    
 
                     // Invoice Date
                     var dateLabel = "Fecha factura";
-                    idx = text.IndexOf(dateLabel);
+                    var idx = text.IndexOf(dateLabel);
+                    logger.Info($"Processing page: {pdfDocumentHelper.CurrentPageNumber}, text length: {text.Length}, dateIdx:{idx}");
+
                     if (idx >= 0)
                     {
                         var after = text.Substring(idx + dateLabel.Length).Trim();
@@ -68,19 +80,18 @@ namespace shopFlow.Importer.Providers
 
                     // Total Amount
                     var lastTotal = text.LastIndexOf("TOTAL");
-                    if (lastTotal >= 0)
+                    logger.Info($"Processing page: {pdfDocumentHelper.CurrentPageNumber}, text length: {text.Length}, lastTotalIdx:{lastTotal}");
+                    var totalInvoiceRegExp = @"IMP TOTAL IMPORTE(.*\n)*TOTAL\s*([\d\,.]*)";
+
+                    var totInvoiceMatch = Regex.Match(text, totalInvoiceRegExp);
+                    if (totInvoiceMatch.Success)
                     {
-                        var after = text.Substring(lastTotal + "TOTAL".Length).Trim();
-                        var lines = after.Split('\n', '\r').Select(l => l.Trim()).Where(l => !string.IsNullOrEmpty(l)).ToList();
-                        foreach (var line in lines)
-                        {
-                            var total = ParseDecimal(line);
-                            if (total > 0)
-                            {
-                                invoiceInfo.TotalAmount = total;
-                                break;
-                            }
-                        }
+                        invoiceInfo.TotalAmount = decimal.Parse(totInvoiceMatch.Groups[2].Value.Trim().Replace(',','.'));
+                        logger.Info($"Processing page: {pdfDocumentHelper.CurrentPageNumber}, found invoice total: {invoiceInfo.TotalAmount}");
+                    }
+                    else
+                    {
+                        logger.Warn($"Processing page: {pdfDocumentHelper.CurrentPageNumber}, no invoice total found in text: {text}");
                     }
 
                     // Items
@@ -137,5 +148,6 @@ namespace shopFlow.Importer.Providers
             invoiceInfo.Items = items;
             return invoiceInfo;
         }
+
     }
 }

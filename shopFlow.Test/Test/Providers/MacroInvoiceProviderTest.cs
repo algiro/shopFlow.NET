@@ -17,7 +17,7 @@ namespace shopFlow.Test.Test.Providers
             using var stream = File.OpenRead("./Resources/InvoiceSamples/00(021)0205(2025)002727.pdf");
             var info = provider.GetInvoiceInfo(stream);
 
-            Assert.Equal("MAKRO", info.SupplierName);
+            Assert.Equal("Makro", info.SupplierName);
             Assert.Equal("0/0(021)0205/(2025)002727", info.InvoiceNumber);
             Assert.Equal(new DateTime(2025, 8, 8, 14, 44, 0), info.InvoiceDate);
             Assert.Equal(141.72m, info.TotalAmount);

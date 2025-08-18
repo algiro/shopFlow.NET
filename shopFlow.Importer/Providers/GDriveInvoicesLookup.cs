@@ -2,6 +2,7 @@
 using Google.Apis.Drive.v3;
 using Google.Apis.Services;
 using Microsoft.Extensions.Logging;
+using shopFlow.Importer.Domain;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -92,7 +93,7 @@ namespace shopFlow.Importer.Providers
                 return null;
             }
         }
-        public async Task MoveInvoiceToImportedFolderAsync(string invoiceId)
+        public async Task MoveInvoiceToImportedFolderAsync(string invoiceId, IInvoiceInfo invoiceInfo)
         {
             try
             {
@@ -108,12 +109,13 @@ namespace shopFlow.Importer.Providers
                     _logger.LogWarning("Invoice with ID {InvoiceId} not found", invoiceId);
                     return;
                 }
-
+                var folderName = invoiceInfo.InvoiceDate.ToString("yyyy-MM") ?? "UnknownDate";
+                var folderId = await CreateSubFolderIfDoesntExist(folderName, _foldersId.imported);
                 // Create a NEW, EMPTY File object for the update
                 var emptyFile = new Google.Apis.Drive.v3.Data.File();
 
                 var updateRequest = _driveService.Files.Update(emptyFile, file.Id);
-                updateRequest.AddParents = _foldersId.imported;
+                updateRequest.AddParents = folderId;
                 updateRequest.RemoveParents = _foldersId.pending;
 
                 await updateRequest.ExecuteAsync();
@@ -124,6 +126,37 @@ namespace shopFlow.Importer.Providers
             {
                 _logger.LogError(ex, "Failed to move invoice {InvoiceId} to imported folder", invoiceId);
             }
+        }
+        public async Task<string> CreateSubFolderIfDoesntExist(string subFolderName, string parentFolderId)
+        {
+            try
+            {
+                var request = _driveService.Files.List();
+                request.Q = $"'{parentFolderId}' in parents and name = '{subFolderName}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false";
+                request.Fields = "files(id, name)";
+                var result = await request.ExecuteAsync();
+                if (result.Files.Any())
+                {
+                    _logger.LogInformation("Subfolder {SubFolderName} already exists in folder {ParentFolderId}", subFolderName, parentFolderId);
+                    return result.Files.First().Id;
+                }
+                var folderMetadata = new Google.Apis.Drive.v3.Data.File()
+                {
+                    Name = subFolderName,
+                    MimeType = "application/vnd.google-apps.folder",
+                    Parents = new List<string> { parentFolderId }
+                };
+                var createRequest = _driveService.Files.Create(folderMetadata);
+                createRequest.Fields = "id";
+                var folder = await createRequest.ExecuteAsync();
+                _logger.LogInformation("Created subfolder {SubFolderName} with ID {SubFolderId} in folder {ParentFolderId}", subFolderName, folder.Id, parentFolderId);
+                return folder.Id;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create subfolder {SubFolderName} in folder {ParentFolderId}", subFolderName, parentFolderId);
+            }
+            return string.Empty;
         }
         private bool IsInvoiceFile(string fileName)
         {
